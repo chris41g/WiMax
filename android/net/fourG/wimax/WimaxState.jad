@@ -1,0 +1,100 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   WimaxState.java
+
+package android.net.fourG.wimax;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public final class WimaxState extends Enum
+    implements Parcelable
+{
+
+    public static WimaxState[] values()
+    {
+        return (WimaxState[])$VALUES.clone();
+    }
+
+    public static WimaxState valueOf(String name)
+    {
+        return (WimaxState)Enum.valueOf(android.net.fourG.wimax.WimaxState.class, name);
+    }
+
+    private WimaxState(String s, int i)
+    {
+        super(s, i);
+    }
+
+    public static WimaxState fromInt(int value)
+    {
+        WimaxState arr$[] = values();
+        int len$ = arr$.length;
+        for(int i$ = 0; i$ < len$; i$++)
+        {
+            WimaxState e = arr$[i$];
+            if(e.ordinal() == value)
+                return e;
+        }
+
+        return null;
+    }
+
+    public int getValue()
+    {
+        return ordinal();
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(name());
+    }
+
+    public static final WimaxState UNKNOWN;
+    public static final WimaxState INITIALIZING;
+    public static final WimaxState INITIALIZED;
+    public static final WimaxState SCANNING;
+    public static final WimaxState READY;
+    public static final WimaxState CONNECTING;
+    public static final WimaxState OBTAINING_IPADDR;
+    public static final WimaxState CONNECTED;
+    public static final WimaxState DISCONNECTING;
+    public static final WimaxState DISCONNECTED;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public WimaxState createFromParcel(Parcel in)
+        {
+            return WimaxState.valueOf(in.readString());
+        }
+
+        public WimaxState[] newArray(int size)
+        {
+            return new WimaxState[size];
+        }
+
+    };
+    private static final WimaxState $VALUES[]; /* synthetic field */
+
+    static 
+    {
+        UNKNOWN = new WimaxState("UNKNOWN", 0);
+        INITIALIZING = new WimaxState("INITIALIZING", 1);
+        INITIALIZED = new WimaxState("INITIALIZED", 2);
+        SCANNING = new WimaxState("SCANNING", 3);
+        READY = new WimaxState("READY", 4);
+        CONNECTING = new WimaxState("CONNECTING", 5);
+        OBTAINING_IPADDR = new WimaxState("OBTAINING_IPADDR", 6);
+        CONNECTED = new WimaxState("CONNECTED", 7);
+        DISCONNECTING = new WimaxState("DISCONNECTING", 8);
+        DISCONNECTED = new WimaxState("DISCONNECTED", 9);
+        $VALUES = (new WimaxState[] {
+            UNKNOWN, INITIALIZING, INITIALIZED, SCANNING, READY, CONNECTING, OBTAINING_IPADDR, CONNECTED, DISCONNECTING, DISCONNECTED
+        });
+    }
+}

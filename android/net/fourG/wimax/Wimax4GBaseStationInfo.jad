@@ -1,0 +1,180 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GBaseStationInfo.java
+
+package android.net.fourG.wimax;
+
+import android.net.fourG.net4GBaseStationInfo;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Wimax4GBaseStationInfo extends net4GBaseStationInfo
+{
+
+    public Wimax4GBaseStationInfo()
+    {
+        m_lNapId = "";
+        m_lPreamble = 0L;
+        m_nVendorId = -1;
+        m_VendorInfo = "";
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public String getNspName()
+    {
+        return m_strNetworkName;
+    }
+
+    public String getRealm()
+    {
+        return m_strRealm;
+    }
+
+    long getPreamble()
+    {
+        return m_lPreamble;
+    }
+
+    public String getNapId()
+    {
+        return m_lNapId;
+    }
+
+    public int getNspId()
+    {
+        return m_lNspId;
+    }
+
+    public boolean isActivated()
+    {
+        return m_bIsConnected;
+    }
+
+    public void setNapId(String lNapID)
+    {
+        m_lNapId = lNapID;
+    }
+
+    int getVendorID()
+    {
+        return m_nVendorId;
+    }
+
+    public String getVendorInfo()
+    {
+        return m_VendorInfo;
+    }
+
+    public void setValue(int Cinr, int NspId, String Realm, int Rssi, boolean IsConnected, String BaseStationId, String NapId, 
+            long lPreamble, int nVendorID, String nspName, int nFrequencyUplink, int nFrequencyDowlink, int NetworkType)
+    {
+        m_nCINR = Cinr;
+        m_lNspId = NspId;
+        m_strRealm = Realm;
+        m_nRSSI = Rssi;
+        m_strBSID = BaseStationId;
+        m_lNapId = NapId;
+        m_bIsConnected = IsConnected;
+        m_lPreamble = lPreamble;
+        m_nVendorId = nVendorID;
+        m_strNetworkName = nspName;
+        m_nFrequencyUplink = nFrequencyUplink;
+        m_nFrequencyDownlink = nFrequencyDowlink;
+        networkType = NetworkType;
+    }
+
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("NspInfo: ");
+        builder.append("m_nCINR: ").append(m_nCINR).append(", m_lNspId: ").append(m_lNspId).append(", m_strRealm: ").append(m_strRealm).append(", m_nRSSI: ").append(m_nRSSI).append(", m_bIsConnected: ").append(m_bIsConnected).append(", m_strBSID: ").append(m_strBSID).append(", m_strNapId: ").append(m_lNapId).append(", m_lPreamble: ").append(m_lPreamble).append(", m_nVendorID: ").append(m_nVendorId).append(", m_VendorInfo: ").append(m_VendorInfo).append(", m_nFrequencyUplink: ").append(m_VendorInfo).append(", m_VendorInfo: ").append(m_nFrequencyUplink).append(", m_nFrequencyDownlink: ").append(m_nFrequencyDownlink);
+        return builder.toString();
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(m_nCINR);
+        dest.writeInt(m_lNspId);
+        dest.writeString(m_strRealm);
+        dest.writeInt(m_nRSSI);
+        dest.writeString(m_strBSID);
+        dest.writeString(m_lNapId);
+        dest.writeLong(m_lPreamble);
+        dest.writeInt(m_nVendorId);
+        dest.writeString(m_strNetworkName);
+        dest.writeLong(m_nFrequencyUplink);
+        dest.writeLong(m_nFrequencyDownlink);
+        dest.writeInt(networkType);
+        dest.writeString(m_VendorInfo);
+        if(m_bIsConnected)
+            dest.writeInt(1);
+        else
+            dest.writeInt(0);
+    }
+
+    public boolean equals(Wimax4GBaseStationInfo info)
+    {
+        return m_lNspId == info.m_lNspId && m_strRealm.equals(info.m_strRealm) && m_strBSID.equals(info.m_strBSID) && m_lNapId.equals(info.m_lNapId) && m_lPreamble == info.m_lPreamble && m_nVendorId == info.m_nVendorId && m_strNetworkName.equals(info.m_strNetworkName) && m_nFrequencyUplink == info.m_nFrequencyUplink && m_nFrequencyDownlink == info.m_nFrequencyDownlink && networkType == info.networkType && m_VendorInfo.equals(info.m_VendorInfo) && m_bIsConnected == info.m_bIsConnected;
+    }
+
+    private String m_strRealm;
+    private String m_lNapId;
+    private long m_lPreamble;
+    private int m_nVendorId;
+    private int m_nCinrInDB;
+    private String m_strNetworkName;
+    private int m_nRssiInDBm;
+    private int m_nIsActivated;
+    private String m_VendorInfo;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public Wimax4GBaseStationInfo createFromParcel(Parcel in)
+        {
+            Wimax4GBaseStationInfo info = new Wimax4GBaseStationInfo();
+            info.in.readInt().access$702 = in;
+            info.in.readInt().access$602 = in;
+            info.m_strRealm = in.readString();
+            info.in.readInt().access$502 = in;
+            info.in.readString().access$402 = in;
+            info.m_lNapId = in.readString();
+            info.m_lPreamble = in.readLong();
+            info.m_nVendorId = in.readInt();
+            info.m_strNetworkName = in.readString();
+            info.in.readLong().access$002 = in;
+            info.in.readLong().readInt = in;
+            info.in.readInt().Wimax4GBaseStationInfo = in;
+            info.m_VendorInfo = in.readString();
+            if(in.readInt() == 0)
+                info.false.Object = in;
+            else
+                info.true.Object = in;
+            return info;
+        }
+
+        public Wimax4GBaseStationInfo[] newArray(int size)
+        {
+            return new Wimax4GBaseStationInfo[size];
+        }
+
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

@@ -1,0 +1,84 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   MruList.java
+
+package android.net.fourG.wimax;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class MruList
+    implements Parcelable
+{
+
+    public MruList()
+    {
+    }
+
+    public void setValue(int nCenterfrequency, byte byBW, byte byFFTSize)
+    {
+        m_nCenterfrequency = nCenterfrequency;
+        m_byBW = byBW;
+        m_byFFTSize = byFFTSize;
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public int getCenterfrequency()
+    {
+        return m_nCenterfrequency;
+    }
+
+    public byte getBW()
+    {
+        return m_byBW;
+    }
+
+    public byte getFFTSize()
+    {
+        return m_byFFTSize;
+    }
+
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("MruList: ");
+        builder.append("m_nCenterfrequency: ").append(m_nCenterfrequency).append(", m_byBW: ").append(m_byBW).append(", m_byFFTSize: ").append(m_byFFTSize);
+        return builder.toString();
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(m_nCenterfrequency);
+        dest.writeByte(m_byBW);
+        dest.writeByte(m_byFFTSize);
+    }
+
+    private int m_nCenterfrequency;
+    private byte m_byBW;
+    private byte m_byFFTSize;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public MruList createFromParcel(Parcel in)
+        {
+            MruList info = new MruList();
+            info.m_nCenterfrequency = in.readInt();
+            info.m_byBW = in.readByte();
+            info.m_byFFTSize = in.readByte();
+            return info;
+        }
+
+        public MruList[] newArray(int size)
+        {
+            return new MruList[size];
+        }
+
+    };
+
+
+
+
+}

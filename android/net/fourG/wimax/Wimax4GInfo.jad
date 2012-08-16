@@ -1,0 +1,191 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GInfo.java
+
+package android.net.fourG.wimax;
+
+import android.net.fourG.net4GInfo;
+import android.net.fourG.net4GSupplicantState;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            Wimax4GBaseStationInfo
+
+public class Wimax4GInfo extends net4GInfo
+{
+
+    Wimax4GInfo()
+    {
+        m_nNSPID = 0;
+        m_strNAPID = "000000";
+        m_nFrequency = 0;
+        m_strConnectionTime = "00:00:00";
+        m_net4GSupplicantState = net4GSupplicantState.UNINITIALIZED;
+    }
+
+    public void setNSPID(int NSPID)
+    {
+        m_nNSPID = NSPID;
+    }
+
+    public int getNSPID()
+    {
+        return m_nNSPID;
+    }
+
+    public void setBSID(String strBSID)
+    {
+        m_strBSID = strBSID;
+        if(strBSID != null)
+        {
+            char cNAPID[] = {
+                strBSID.charAt(0), strBSID.charAt(1), strBSID.charAt(3), strBSID.charAt(4), strBSID.charAt(6), strBSID.charAt(7)
+            };
+            m_strNAPID = new String(cNAPID);
+        } else
+        {
+            m_strNAPID = null;
+        }
+    }
+
+    public String getNAPID()
+    {
+        return m_strNAPID;
+    }
+
+    public void setFREQ(int FREQ)
+    {
+        m_nFrequency = FREQ;
+    }
+
+    public int getFREQ()
+    {
+        return m_nFrequency;
+    }
+
+    public void setConnectionTime(String ConnectionTime)
+    {
+        m_strConnectionTime = ConnectionTime;
+    }
+
+    public String getConnectionTime()
+    {
+        return m_strConnectionTime;
+    }
+
+    public net4GSupplicantState getSupplicantState()
+    {
+        return m_net4GSupplicantState;
+    }
+
+    public void setSupplicantState(net4GSupplicantState stateName)
+    {
+        m_net4GSupplicantState = stateName;
+    }
+
+    public Wimax4GBaseStationInfo get4GBaseStationInfoServing()
+    {
+        return m_wm4GBaseStationInfo;
+    }
+
+    public void set4GBaseStationInfo(Wimax4GBaseStationInfo info)
+    {
+        if(info == null)
+        {
+            return;
+        } else
+        {
+            m_net4GBaseStationInfo = info;
+            m_wm4GBaseStationInfo = info;
+            return;
+        }
+    }
+
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer("Wimax4GInfo: ");
+        String none = "<none>";
+        sb.append(", BSID: ").append(m_strBSID != null ? m_strBSID : none).append(", RSSI: ").append(m_nRssi).append(", CINR: ").append(m_nCinr).append(", net4GSupplicant state: ").append(m_net4GSupplicantState != null ? ((Object) (m_net4GSupplicantState)) : ((Object) (none))).append(", IP Address: ").append(m_nIpAddress).append(", Link speed: ").append(m_nLinkSpeed).append(", LINK_STATE_DETAIL: ").append(mLinkStateDetail != null ? ((Object) (mLinkStateDetail)) : ((Object) (none))).append(", LINK_STATE_REASON: ").append(mLinkStateReason != null ? ((Object) (mLinkStateReason)) : ((Object) (none))).append(", MAC: ").append(m_strMacAddress != null ? m_strMacAddress : none).append(", Net ID: ").append(m_nNetworkId).append(", Tx Power: ").append(m_nTxPower).append(", 4G State: ").append(m_n4GState).append(", NSP ID: ").append(m_nNSPID).append(", NAP ID: ").append(m_strNAPID).append(", Frequency: ").append(m_nFrequency).append(", Connection Time: ").append(m_strConnectionTime);
+        return sb.toString();
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(m_nRssi);
+        dest.writeInt(m_nCinr);
+        dest.writeInt(m_nIpAddress);
+        dest.writeInt(m_nLinkSpeed);
+        dest.writeInt(m_nNetworkId);
+        dest.writeInt(m_nTxPower);
+        dest.writeInt(m_n4GState);
+        dest.writeInt(m_nNSPID);
+        dest.writeInt(m_nFrequency);
+        dest.writeString(m_strBSID);
+        dest.writeString(m_strMacAddress);
+        if(mLinkStateDetail != null)
+            dest.writeString(mLinkStateDetail.name());
+        else
+            dest.writeString(android.net.fourG.net4GInfo.LINK_STATE_DETAIL.valueOf("LINK_ST_DETAIL_UNDEFINED").toString());
+        if(mLinkStateReason != null)
+            dest.writeString(mLinkStateReason.name());
+        else
+            dest.writeString(android.net.fourG.net4GInfo.LINK_STATE_REASON.valueOf("LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE").toString());
+        dest.writeString(m_strNAPID);
+        dest.writeString(m_strConnectionTime);
+        m_net4GSupplicantState.writeToParcel(dest, flags);
+    }
+
+    private static final String TAG = "Wimax4GInfo";
+    private int m_nNSPID;
+    private String m_strNAPID;
+    private int m_nFrequency;
+    private String m_strConnectionTime;
+    private Wimax4GBaseStationInfo m_wm4GBaseStationInfo;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public Wimax4GInfo createFromParcel(Parcel in)
+        {
+            Wimax4GInfo info = new Wimax4GInfo();
+            info.setRssi(in.readInt());
+            info.setCinr(in.readInt());
+            info.setIpAddress(in.readInt());
+            info.setLinkSpeed(in.readInt());
+            info.setNetworkId(in.readInt());
+            info.setTxPower(in.readInt());
+            info.set4GState(in.readInt());
+            info.setNSPID(in.readInt());
+            info.setFREQ(in.readInt());
+            info.in.readString().setIpAddress = in;
+            info.in.readString().setCinr = in;
+            Wimax4GInfo _tmp = info;
+            android.net.fourG.net4GInfo.LINK_STATE_DETAIL.valueOf(in.readString()).Wimax4GInfo.setRssi = this;
+            Wimax4GInfo _tmp1 = info;
+            android.net.fourG.net4GInfo.LINK_STATE_REASON.valueOf(in.readString()).Parcel.readInt = this;
+            info.m_strNAPID = in.readString();
+            info.m_strConnectionTime = in.readString();
+            info.((net4GSupplicantState)net4GSupplicantState.CREATOR.createFromParcel(in)).Object = in;
+            return info;
+        }
+
+        public Wimax4GInfo[] newArray(int size)
+        {
+            return new Wimax4GInfo[size];
+        }
+
+    };
+
+
+
+
+
+
+
+
+}

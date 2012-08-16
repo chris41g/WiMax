@@ -1,0 +1,105 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   net4GSupplicantState.java
+
+package android.net.fourG;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public final class net4GSupplicantState extends Enum
+    implements Parcelable
+{
+
+    public static net4GSupplicantState[] values()
+    {
+        return (net4GSupplicantState[])$VALUES.clone();
+    }
+
+    public static net4GSupplicantState valueOf(String name)
+    {
+        return (net4GSupplicantState)Enum.valueOf(android.net.fourG.net4GSupplicantState.class, name);
+    }
+
+    private net4GSupplicantState(String s, int i)
+    {
+        super(s, i);
+    }
+
+    public static boolean isValidState(net4GSupplicantState state)
+    {
+        return state != UNINITIALIZED && state != INVALID;
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public int getValue()
+    {
+        return ordinal();
+    }
+
+    public static net4GSupplicantState fromInt(int value)
+    {
+        net4GSupplicantState arr$[] = values();
+        int len$ = arr$.length;
+        for(int i$ = 0; i$ < len$; i$++)
+        {
+            net4GSupplicantState e = arr$[i$];
+            if(e.ordinal() == value)
+                return e;
+        }
+
+        return null;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(name());
+    }
+
+    public static final net4GSupplicantState ASSOCIATED;
+    public static final net4GSupplicantState ASSOCIATING;
+    public static final net4GSupplicantState COMPLETED;
+    public static final net4GSupplicantState DISCONNECTED;
+    public static final net4GSupplicantState DORMANT;
+    public static final net4GSupplicantState HANDSHAKE;
+    public static final net4GSupplicantState INACTIVE;
+    public static final net4GSupplicantState INVALID;
+    public static final net4GSupplicantState SCANNING;
+    public static final net4GSupplicantState UNINITIALIZED;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public net4GSupplicantState createFromParcel(Parcel in)
+        {
+            return net4GSupplicantState.valueOf(in.readString());
+        }
+
+        public net4GSupplicantState[] newArray(int size)
+        {
+            return new net4GSupplicantState[size];
+        }
+
+    };
+    private static final net4GSupplicantState $VALUES[]; /* synthetic field */
+
+    static 
+    {
+        ASSOCIATED = new net4GSupplicantState("ASSOCIATED", 0);
+        ASSOCIATING = new net4GSupplicantState("ASSOCIATING", 1);
+        COMPLETED = new net4GSupplicantState("COMPLETED", 2);
+        DISCONNECTED = new net4GSupplicantState("DISCONNECTED", 3);
+        DORMANT = new net4GSupplicantState("DORMANT", 4);
+        HANDSHAKE = new net4GSupplicantState("HANDSHAKE", 5);
+        INACTIVE = new net4GSupplicantState("INACTIVE", 6);
+        INVALID = new net4GSupplicantState("INVALID", 7);
+        SCANNING = new net4GSupplicantState("SCANNING", 8);
+        UNINITIALIZED = new net4GSupplicantState("UNINITIALIZED", 9);
+        $VALUES = (new net4GSupplicantState[] {
+            ASSOCIATED, ASSOCIATING, COMPLETED, DISCONNECTED, DORMANT, HANDSHAKE, INACTIVE, INVALID, SCANNING, UNINITIALIZED
+        });
+    }
+}

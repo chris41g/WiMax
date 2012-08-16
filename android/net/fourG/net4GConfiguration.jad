@@ -1,0 +1,67 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   net4GConfiguration.java
+
+package android.net.fourG;
+
+import android.os.Parcelable;
+
+public abstract class net4GConfiguration
+    implements Parcelable
+{
+
+    public net4GConfiguration()
+    {
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public int getNetworkId()
+    {
+        return m_nNetworkId;
+    }
+
+    public int getPriority()
+    {
+        return m_nPriority;
+    }
+
+    public int getStatus()
+    {
+        return m_nStatus;
+    }
+
+    public void setNetworkId(int NetworkId)
+    {
+        m_nNetworkId = NetworkId;
+    }
+
+    public void setStatus(int status)
+    {
+        m_nStatus = status;
+    }
+
+    public void setPriority(int Priority)
+    {
+        m_nPriority = Priority;
+    }
+
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer("net4GDeviceInfo: ");
+        String none = "<none>";
+        sb.append("NetworkId ").append(Integer.toString(m_nNetworkId)).append("status ").append(Integer.toString(m_nStatus)).append("priority ").append(Integer.toString(m_nStatus));
+        return sb.toString();
+    }
+
+    protected int m_nNetworkId;
+    protected int m_nStatus;
+    protected int m_nPriority;
+    public static final int CURRENT = 1;
+    public static final int DISABLED = 2;
+    public static final int ENABLED = 3;
+}

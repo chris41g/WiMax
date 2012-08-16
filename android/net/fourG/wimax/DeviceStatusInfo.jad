@@ -1,0 +1,274 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   DeviceStatusInfo.java
+
+package android.net.fourG.wimax;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class DeviceStatusInfo
+    implements Parcelable
+{
+    public static final class ConnectionProgressInfo extends Enum
+    {
+
+        public static ConnectionProgressInfo[] values()
+        {
+            return (ConnectionProgressInfo[])$VALUES.clone();
+        }
+
+        public static ConnectionProgressInfo valueOf(String name)
+        {
+            return (ConnectionProgressInfo)Enum.valueOf(android.net.fourG.wimax.DeviceStatusInfo$ConnectionProgressInfo.class, name);
+        }
+
+        public static final ConnectionProgressInfo Ranging;
+        public static final ConnectionProgressInfo SBC;
+        public static final ConnectionProgressInfo PKM;
+        public static final ConnectionProgressInfo Registration;
+        public static final ConnectionProgressInfo DSX;
+        public static final ConnectionProgressInfo Registered;
+        public static final ConnectionProgressInfo Idle;
+        public static final ConnectionProgressInfo IP_Renew;
+        public static final ConnectionProgressInfo De_registration;
+        public static final ConnectionProgressInfo Syncup_PHY;
+        public static final ConnectionProgressInfo Syncup_MAC;
+        public static final ConnectionProgressInfo EAP_authentication_Device;
+        public static final ConnectionProgressInfo EAP_authentication_User;
+        public static final ConnectionProgressInfo Timeout_Sync;
+        public static final ConnectionProgressInfo Timeout_NE;
+        public static final ConnectionProgressInfo Timeout_NDREG;
+        public static final ConnectionProgressInfo IP_USB;
+        public static final ConnectionProgressInfo CONNECTED_USB;
+        public static final ConnectionProgressInfo RESUME_USB;
+        public static final ConnectionProgressInfo SUSPEND_USB;
+        public static final ConnectionProgressInfo Met_Exit_Criteria;
+        public static final ConnectionProgressInfo Not_Met_Entry_Criteria;
+        public static final ConnectionProgressInfo Abnormal_State;
+        public static final ConnectionProgressInfo DISCONNECTED_USB;
+        private static final ConnectionProgressInfo $VALUES[];
+
+        static 
+        {
+            Ranging = new ConnectionProgressInfo("Ranging", 0);
+            SBC = new ConnectionProgressInfo("SBC", 1);
+            PKM = new ConnectionProgressInfo("PKM", 2);
+            Registration = new ConnectionProgressInfo("Registration", 3);
+            DSX = new ConnectionProgressInfo("DSX", 4);
+            Registered = new ConnectionProgressInfo("Registered", 5);
+            Idle = new ConnectionProgressInfo("Idle", 6);
+            IP_Renew = new ConnectionProgressInfo("IP_Renew", 7);
+            De_registration = new ConnectionProgressInfo("De_registration", 8);
+            Syncup_PHY = new ConnectionProgressInfo("Syncup_PHY", 9);
+            Syncup_MAC = new ConnectionProgressInfo("Syncup_MAC", 10);
+            EAP_authentication_Device = new ConnectionProgressInfo("EAP_authentication_Device", 11);
+            EAP_authentication_User = new ConnectionProgressInfo("EAP_authentication_User", 12);
+            Timeout_Sync = new ConnectionProgressInfo("Timeout_Sync", 13);
+            Timeout_NE = new ConnectionProgressInfo("Timeout_NE", 14);
+            Timeout_NDREG = new ConnectionProgressInfo("Timeout_NDREG", 15);
+            IP_USB = new ConnectionProgressInfo("IP_USB", 16);
+            CONNECTED_USB = new ConnectionProgressInfo("CONNECTED_USB", 17);
+            RESUME_USB = new ConnectionProgressInfo("RESUME_USB", 18);
+            SUSPEND_USB = new ConnectionProgressInfo("SUSPEND_USB", 19);
+            Met_Exit_Criteria = new ConnectionProgressInfo("Met_Exit_Criteria", 20);
+            Not_Met_Entry_Criteria = new ConnectionProgressInfo("Not_Met_Entry_Criteria", 21);
+            Abnormal_State = new ConnectionProgressInfo("Abnormal_State", 22);
+            DISCONNECTED_USB = new ConnectionProgressInfo("DISCONNECTED_USB", 23);
+            $VALUES = (new ConnectionProgressInfo[] {
+                Ranging, SBC, PKM, Registration, DSX, Registered, Idle, IP_Renew, De_registration, Syncup_PHY, 
+                Syncup_MAC, EAP_authentication_Device, EAP_authentication_User, Timeout_Sync, Timeout_NE, Timeout_NDREG, IP_USB, CONNECTED_USB, RESUME_USB, SUSPEND_USB, 
+                Met_Exit_Criteria, Not_Met_Entry_Criteria, Abnormal_State, DISCONNECTED_USB
+            });
+        }
+
+        private ConnectionProgressInfo(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+    public static final class StatusReason extends Enum
+    {
+
+        public static StatusReason[] values()
+        {
+            return (StatusReason[])$VALUES.clone();
+        }
+
+        public static StatusReason valueOf(String name)
+        {
+            return (StatusReason)Enum.valueOf(android.net.fourG.wimax.DeviceStatusInfo$StatusReason.class, name);
+        }
+
+        public static final StatusReason Normal;
+        public static final StatusReason Fail;
+        private static final StatusReason $VALUES[];
+
+        static 
+        {
+            Normal = new StatusReason("Normal", 0);
+            Fail = new StatusReason("Fail", 1);
+            $VALUES = (new StatusReason[] {
+                Normal, Fail
+            });
+        }
+
+        private StatusReason(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+    public static final class DeviceStatus extends Enum
+    {
+
+        public static DeviceStatus[] values()
+        {
+            return (DeviceStatus[])$VALUES.clone();
+        }
+
+        public static DeviceStatus valueOf(String name)
+        {
+            return (DeviceStatus)Enum.valueOf(android.net.fourG.wimax.DeviceStatusInfo$DeviceStatus.class, name);
+        }
+
+        public static final DeviceStatus UnInitialized;
+        public static final DeviceStatus RF_OFF_HW_SW;
+        public static final DeviceStatus RF_OFF_HW;
+        public static final DeviceStatus RF_OFF_SW;
+        public static final DeviceStatus Initialized;
+        public static final DeviceStatus Scanning;
+        public static final DeviceStatus Ready;
+        public static final DeviceStatus Connecting;
+        public static final DeviceStatus Data_Connected;
+        public static final DeviceStatus Disconnecting;
+        public static final DeviceStatus Disconnected;
+        private static final DeviceStatus $VALUES[];
+
+        static 
+        {
+            UnInitialized = new DeviceStatus("UnInitialized", 0);
+            RF_OFF_HW_SW = new DeviceStatus("RF_OFF_HW_SW", 1);
+            RF_OFF_HW = new DeviceStatus("RF_OFF_HW", 2);
+            RF_OFF_SW = new DeviceStatus("RF_OFF_SW", 3);
+            Initialized = new DeviceStatus("Initialized", 4);
+            Scanning = new DeviceStatus("Scanning", 5);
+            Ready = new DeviceStatus("Ready", 6);
+            Connecting = new DeviceStatus("Connecting", 7);
+            Data_Connected = new DeviceStatus("Data_Connected", 8);
+            Disconnecting = new DeviceStatus("Disconnecting", 9);
+            Disconnected = new DeviceStatus("Disconnected", 10);
+            $VALUES = (new DeviceStatus[] {
+                UnInitialized, RF_OFF_HW_SW, RF_OFF_HW, RF_OFF_SW, Initialized, Scanning, Ready, Connecting, Data_Connected, Disconnecting, 
+                Disconnected
+            });
+        }
+
+        private DeviceStatus(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+
+    public DeviceStatusInfo()
+    {
+    }
+
+    DeviceStatusInfo(int deviceStatus, int statusReason, int connectionProgressInfo)
+    {
+        setDeviceStatus(deviceStatus, statusReason, connectionProgressInfo);
+    }
+
+    public DeviceStatus getDeviceStatus()
+    {
+        DeviceStatus arr$[] = DeviceStatus.values();
+        int len$ = arr$.length;
+        for(int i$ = 0; i$ < len$; i$++)
+        {
+            DeviceStatus eDeviceStatus = arr$[i$];
+            if(eDeviceStatus.ordinal() == mDeviceStatus)
+                return eDeviceStatus;
+        }
+
+        return null;
+    }
+
+    void setDeviceStatus(int deviceStatus, int statusReason, int connectionProgressInfo)
+    {
+        mDeviceStatus = deviceStatus;
+        mStatusReason = statusReason;
+        mConnectionProgressInfo = connectionProgressInfo;
+    }
+
+    public StatusReason getStatusReason()
+    {
+        StatusReason arr$[] = StatusReason.values();
+        int len$ = arr$.length;
+        for(int i$ = 0; i$ < len$; i$++)
+        {
+            StatusReason eStatusReason = arr$[i$];
+            if(eStatusReason.ordinal() == mStatusReason)
+                return eStatusReason;
+        }
+
+        return null;
+    }
+
+    public ConnectionProgressInfo getConnectionProgressInfo()
+    {
+        ConnectionProgressInfo arr$[] = ConnectionProgressInfo.values();
+        int len$ = arr$.length;
+        for(int i$ = 0; i$ < len$; i$++)
+        {
+            ConnectionProgressInfo eInfo = arr$[i$];
+            if(eInfo.ordinal() == mConnectionProgressInfo)
+                return eInfo;
+        }
+
+        return null;
+    }
+
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("DeviceStatusInfo: ");
+        builder.append("DeviceStatus: ").append(mDeviceStatus).append(", StatusReason: ").append(mStatusReason).append(", ConnectionProgressInfo: ").append(mConnectionProgressInfo);
+        return builder.toString();
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(mDeviceStatus);
+        dest.writeInt(mStatusReason);
+        dest.writeInt(mConnectionProgressInfo);
+    }
+
+    private int mDeviceStatus;
+    private int mConnectionProgressInfo;
+    private int mStatusReason;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public DeviceStatusInfo createFromParcel(Parcel in)
+        {
+            int deviceStatus = in.readInt();
+            int statusReason = in.readInt();
+            int connectionProgressInfo = in.readInt();
+            DeviceStatusInfo deviceStatusInfo = new DeviceStatusInfo(deviceStatus, statusReason, connectionProgressInfo);
+            return deviceStatusInfo;
+        }
+
+        public DeviceStatusInfo[] newArray(int size)
+        {
+            return new DeviceStatusInfo[size];
+        }
+
+    };
+
+}

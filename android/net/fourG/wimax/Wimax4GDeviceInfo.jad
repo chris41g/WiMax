@@ -1,0 +1,124 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GDeviceInfo.java
+
+package android.net.fourG.wimax;
+
+import android.net.fourG.net4GDeviceInfo;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            DeviceVersion
+
+public class Wimax4GDeviceInfo extends net4GDeviceInfo
+{
+
+    public Wimax4GDeviceInfo()
+    {
+        strAsicVersion = null;
+        strHwVersion = null;
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public String getDeviceName()
+    {
+        return m_strDeviceName;
+    }
+
+    public DeviceVersion getAsicVersion()
+    {
+        DeviceVersion AsicVersion = new DeviceVersion(strAsicVersion);
+        return AsicVersion;
+    }
+
+    public String getHwVersion()
+    {
+        DeviceVersion HwVersion = new DeviceVersion(strHwVersion);
+        return HwVersion.toString();
+    }
+
+    public String getMacAddress()
+    {
+        return strMacAddress;
+    }
+
+    public DeviceVersion getRfVersion()
+    {
+        DeviceVersion RfVersion = new DeviceVersion(strRfVersion);
+        return RfVersion;
+    }
+
+    public String getSwVersion()
+    {
+        DeviceVersion SwVersion = new DeviceVersion(strSwVersion);
+        return SwVersion.toString();
+    }
+
+    public String getVendorName()
+    {
+        return strVendorName;
+    }
+
+    public String getVendorSpecificInfo()
+    {
+        return strVendorSpecificInfo;
+    }
+
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer("Wimax4GDeviceInfo: ");
+        String none = "<none>";
+        sb.append("DeviceName: ").append(m_strDeviceName != null ? m_strDeviceName : none).append(", HwVersion: ").append(strHwVersion != null ? strHwVersion : none).append(", SwVersion: ").append(strSwVersion != null ? strSwVersion : none);
+        return sb.toString();
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(strAsicVersion);
+        dest.writeString(strHwVersion);
+        dest.writeString(m_strDeviceName);
+        dest.writeString(strMacAddress);
+        dest.writeString(strRfVersion);
+        dest.writeString(strSwVersion);
+        dest.writeString(strVendorName);
+        dest.writeString(strVendorSpecificInfo);
+    }
+
+    String strAsicVersion;
+    String strHwVersion;
+    String strMacAddress;
+    String strRfVersion;
+    String strSwVersion;
+    String strVendorName;
+    String strVendorSpecificInfo;
+    String m_strDeviceName;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public Wimax4GDeviceInfo createFromParcel(Parcel in)
+        {
+            Wimax4GDeviceInfo info = new Wimax4GDeviceInfo();
+            info.strAsicVersion = in.readString();
+            info.strHwVersion = in.readString();
+            info.m_strDeviceName = in.readString();
+            info.strMacAddress = in.readString();
+            info.strRfVersion = in.readString();
+            info.strSwVersion = in.readString();
+            info.strVendorName = in.readString();
+            info.strVendorSpecificInfo = in.readString();
+            return info;
+        }
+
+        public Wimax4GDeviceInfo[] newArray(int size)
+        {
+            return new Wimax4GDeviceInfo[size];
+        }
+
+    };
+
+}

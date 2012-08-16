@@ -1,0 +1,1309 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GManager.java
+
+package android.net.fourG.wimax;
+
+import android.net.DhcpInfo;
+import android.net.fourG.net4GManager;
+import android.os.*;
+import android.util.Log;
+import java.io.*;
+import java.util.List;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            MruList, IWimax4GManager, WimaxState, Wimax4GInfo, 
+//            Wimax4GDeviceInfo, Wimax4GBaseStationInfo
+
+public class Wimax4GManager extends net4GManager
+{
+    public class MulticastLock
+    {
+
+        public void acquire()
+        {
+            synchronized(mBinder)
+            {
+                if(mRefCounted ? ++mRefCount > 0 : !mHeld)
+                {
+                    try
+                    {
+                        Wimax4GManager.mService.acquireMulticastLock(mBinder, mTag);
+                        synchronized(Wimax4GManager.this)
+                        {
+                            if(MulticastLock >= 50)
+                            {
+                                Wimax4GManager.mService.releaseMulticastLock();
+                                throw new UnsupportedOperationException("Exceeded maximum number of wimax locks");
+                            }
+                            MulticastLock++;
+                        }
+                    }
+                    catch(RemoteException ignore)
+                    {
+                        if(Wimax4GManager.m_bLog)
+                            Log.e("Wimax4GManager", "------MulticastLock - acquire RemoteException----------------");
+                    }
+                    mHeld = true;
+                }
+            }
+        }
+
+        public void release()
+        {
+            synchronized(mBinder)
+            {
+                if(mRefCounted ? --mRefCount == 0 : mHeld)
+                {
+                    try
+                    {
+                        Wimax4GManager.mService.releaseMulticastLock();
+                        synchronized(Wimax4GManager.this)
+                        {
+                            MulticastLock--;
+                        }
+                    }
+                    catch(RemoteException ignore)
+                    {
+                        if(Wimax4GManager.m_bLog)
+                            Log.e("Wimax4GManager", "------MulticastLock - release RemoteException----------------");
+                    }
+                    mHeld = false;
+                }
+                if(mRefCount < 0)
+                    throw new RuntimeException((new StringBuilder()).append("MulticastLock under-locked ").append(mTag).toString());
+            }
+        }
+
+        public void setReferenceCounted(boolean refCounted)
+        {
+            mRefCounted = refCounted;
+        }
+
+        public boolean isHeld()
+        {
+            synchronized(mBinder)
+            {
+                return mHeld;
+            }
+        }
+
+        public String toString()
+        {
+            synchronized(mBinder)
+            {
+                String s1 = Integer.toHexString(System.identityHashCode(this));
+                String s2 = mHeld ? "held; " : "";
+                String s3;
+                if(mRefCounted)
+                    s3 = (new StringBuilder()).append("refcounted: refcount = ").append(mRefCount).toString();
+                else
+                    s3 = "not refcounted";
+                return (new StringBuilder()).append("MulticastLock{ ").append(s1).append("; ").append(s2).append(s3).append(" }").toString();
+            }
+        }
+
+        protected void finalize()
+            throws Throwable
+        {
+            super.finalize();
+            setReferenceCounted(false);
+            release();
+        }
+
+        private String mTag;
+        private final IBinder mBinder;
+        private int mRefCount;
+        private boolean mRefCounted;
+        private boolean mHeld;
+
+        private MulticastLock(String tag)
+        {
+            mTag = tag;
+            mBinder = new Binder();
+            mRefCount = 0;
+            mRefCounted = true;
+            mHeld = false;
+        }
+
+    }
+
+    public class Lock extends android.net.fourG.net4GManager.Lock
+    {
+
+        public void acquire()
+        {
+            synchronized(mBinder)
+            {
+                if(mRefCounted ? ++mRefCount > 0 : !mHeld)
+                {
+                    try
+                    {
+                        Wimax4GManager.mService.acquireLock(mBinder, mLockType, mTag);
+                        synchronized(Wimax4GManager.this)
+                        {
+                            if(Lock >= 50)
+                            {
+                                Wimax4GManager.mService.releaseLock(mBinder);
+                                throw new UnsupportedOperationException("Exceeded maximum number of Wimax locks");
+                            }
+                            Lock++;
+                        }
+                    }
+                    catch(RemoteException ignore) { }
+                    mHeld = true;
+                }
+            }
+        }
+
+        public void release()
+        {
+            synchronized(mBinder)
+            {
+                if(mRefCounted ? --mRefCount == 0 : mHeld)
+                {
+                    try
+                    {
+                        Wimax4GManager.mService.releaseLock(mBinder);
+                        synchronized(Wimax4GManager.this)
+                        {
+                            Lock--;
+                        }
+                    }
+                    catch(RemoteException ignore) { }
+                    mHeld = false;
+                }
+                if(mRefCount < 0)
+                    throw new RuntimeException((new StringBuilder()).append("WimaxLock under-locked ").append(mTag).toString());
+            }
+        }
+
+        public void setReferenceCounted(boolean refCounted)
+        {
+            mRefCounted = refCounted;
+        }
+
+        public boolean isHeld()
+        {
+            synchronized(mBinder)
+            {
+                return mHeld;
+            }
+        }
+
+        public String toString()
+        {
+            synchronized(mBinder)
+            {
+                String s1 = Integer.toHexString(System.identityHashCode(this));
+                String s2 = mHeld ? "held; " : "";
+                String s3;
+                if(mRefCounted)
+                    s3 = (new StringBuilder()).append("refcounted: refcount = ").append(mRefCount).toString();
+                else
+                    s3 = "not refcounted";
+                return (new StringBuilder()).append("Lock{ ").append(s1).append("; ").append(s2).append(s3).append(" }").toString();
+            }
+        }
+
+        protected void finalize()
+            throws Throwable
+        {
+            super.finalize();
+            synchronized(mBinder)
+            {
+                if(mHeld)
+                    try
+                    {
+                        Wimax4GManager.mService.releaseLock(mBinder);
+                        synchronized(Wimax4GManager.this)
+                        {
+                            Lock--;
+                        }
+                    }
+                    catch(RemoteException ignore) { }
+            }
+        }
+
+        private final IBinder mBinder;
+
+        private Lock(int lockType, String tag)
+        {
+            mTag = tag;
+            mLockType = lockType;
+            mBinder = new Binder();
+            mRefCount = 0;
+            mRefCounted = true;
+            mHeld = false;
+        }
+
+    }
+
+    public static class WimaxConnectionStatistics extends android.net.fourG.net4GManager.ConnectionStatistics
+    {
+
+        public long getTotalRxBytes()
+        {
+            m_lTotalRxBytes = getWimaxStat(WIMAX_RX_BYTES);
+            return m_lTotalRxBytes;
+        }
+
+        public long getTotalRxPackets()
+        {
+            m_lTotalRxPackets = getWimaxStat(WIMAX_RX_PACKETS);
+            return m_lTotalRxPackets;
+        }
+
+        public long getTotalTxBytes()
+        {
+            m_lTotalTxBytes = getWimaxStat(WIMAX_TX_BYTES);
+            return m_lTotalTxBytes;
+        }
+
+        public long getTotalTxPackets()
+        {
+            m_lTotalTxPackets = getWimaxStat(WIMAX_TX_PACKETS);
+            return getWimaxStat(WIMAX_TX_PACKETS);
+        }
+
+        public int getDownlinkModulation()
+        {
+            return -1;
+        }
+
+        public int getUplinkModulation()
+        {
+            return -1;
+        }
+
+        public int getDownlinkThroughput()
+            throws Exception
+        {
+            long mRxStart = getTotalRxBytes();
+            Thread.sleep(1000L);
+            long mRxStop = getTotalRxBytes();
+            long mDiffRxsize = mRxStop - mRxStart;
+            int mThroughput = (int)(mDiffRxsize * 8L);
+            return mThroughput;
+        }
+
+        public int getUplinkThroughput()
+            throws Exception
+        {
+            long mTxStart = getTotalTxBytes();
+            Thread.sleep(1000L);
+            long mTxStop = getTotalTxBytes();
+            long mDiffTxsize = mTxStop - mTxStart;
+            int mThroughput = (int)(mDiffTxsize * 8L);
+            return mThroughput;
+        }
+
+        private static File[] WimaxFiles(String whatStat)
+        {
+            File files[] = new File[5];
+            files[0] = new File((new StringBuilder()).append("/sys/class/net/uwbr0/statistics/").append(whatStat).toString());
+            return files;
+        }
+
+        private static long getWimaxStat(File files[])
+        {
+            for(int i = 0; i < files.length; i++)
+            {
+                File file = files[i];
+                if(!file.exists())
+                    continue;
+                try
+                {
+                    RandomAccessFile raf = new RandomAccessFile(file, "r");
+                    return getNumberFromFile(raf, file.getAbsolutePath());
+                }
+                catch(IOException e)
+                {
+                    if(Wimax4GManager.m_bLog)
+                        Log.e("WimaxConnectionStatistics", (new StringBuilder()).append("Exception opening TCP statistics file ").append(file.getAbsolutePath()).toString(), e);
+                }
+            }
+
+            return 0L;
+        }
+
+        private static synchronized long getNumberFromFile(RandomAccessFile raf, String filename)
+        {
+            try
+            {
+                try
+                {
+                    raf.read(buf);
+                    raf.close();
+                }
+                catch(IOException e)
+                {
+                    if(Wimax4GManager.m_bLog)
+                        Log.e("WimaxConnectionStatistics", (new StringBuilder()).append("Exception getting TCP bytes from ").append(filename).toString(), e);
+                    long l = 0L;
+                    return l;
+                }
+                if(raf != null)
+                    try
+                    {
+                        raf.close();
+                    }
+                    catch(IOException e)
+                    {
+                        if(Wimax4GManager.m_bLog)
+                            Log.e("WimaxConnectionStatistics", (new StringBuilder()).append("Exception closing ").append(filename).toString(), e);
+                    }
+            }
+            finally
+            {
+                if(raf != null)
+                    try
+                    {
+                        raf.close();
+                    }
+                    catch(IOException e)
+                    {
+                        if(Wimax4GManager.m_bLog)
+                            Log.e("WimaxConnectionStatistics", (new StringBuilder()).append("Exception closing ").append(filename).toString(), e);
+                    }
+            }
+            long num = 0L;
+            for(int i = 0; i < buf.length && buf[i] >= 48 && buf[i] <= 57; i++)
+            {
+                num *= 10L;
+                num += buf[i] - 48;
+            }
+
+            return num;
+        }
+
+        public String toString()
+        {
+            StringBuffer sb = new StringBuffer("WimaxConnectionStatistics");
+            String none = "<none>";
+            sb.append("TotalRxBytes: ").append(m_lTotalRxBytes).append(", TotalRxPackets: ").append(m_lTotalRxPackets).append(", TotalTxBytes: ").append(m_lTotalTxBytes).append(", TotalTxPackets: ").append(m_lTotalTxPackets);
+            return sb.toString();
+        }
+
+        public int describeContents()
+        {
+            return 0;
+        }
+
+        public void writeToParcel(Parcel dest, int flags)
+        {
+            dest.writeLong(m_lTotalRxBytes);
+            dest.writeLong(m_lTotalRxPackets);
+            dest.writeLong(m_lTotalTxBytes);
+            dest.writeLong(m_lTotalTxPackets);
+        }
+
+        private static final String TAG = "WimaxConnectionStatistics";
+        private static final File WIMAX_TX_PACKETS[] = WimaxFiles("tx_packets");
+        private static final File WIMAX_RX_PACKETS[] = WimaxFiles("rx_packets");
+        private static final File WIMAX_TX_BYTES[] = WimaxFiles("tx_bytes");
+        private static final File WIMAX_RX_BYTES[] = WimaxFiles("rx_bytes");
+        private static final byte buf[] = new byte[16];
+        public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+            public WimaxConnectionStatistics createFromParcel(Parcel in)
+            {
+                WimaxConnectionStatistics info = new WimaxConnectionStatistics();
+                info.m_lTotalRxBytes = in.readLong();
+                info.m_lTotalRxPackets = in.readLong();
+                info.m_lTotalTxBytes = in.readLong();
+                info.m_lTotalTxPackets = in.readLong();
+                return info;
+            }
+
+            public WimaxConnectionStatistics[] newArray(int size)
+            {
+                return new WimaxConnectionStatistics[size];
+            }
+
+        };
+
+
+        public WimaxConnectionStatistics()
+        {
+        }
+    }
+
+    public static class WimaxRadioInfoTemperature extends android.net.fourG.net4GManager.RadioInfoTemperature
+    {
+
+        void setValue(int nTemperature, int nIdleMode, int nSleepMode, int nIdleModeTimer, int npseudoMode)
+        {
+            m_nTemperature = nTemperature;
+            m_nIdleMode = nIdleMode;
+            m_nSleepMode = nSleepMode;
+            m_nIdleModeTimer = nIdleModeTimer;
+            m_nPseudoMode = npseudoMode;
+            try
+            {
+                m_nMaxTemp = Wimax4GManager.mService.getMaxTemperature();
+                m_nMinTemp = Wimax4GManager.mService.getMinTemperature();
+                if(nTemperature > m_nMaxTemp)
+                {
+                    m_nMaxTemp = m_nTemperature;
+                    Wimax4GManager.mService.setMaxTemperature(m_nTemperature);
+                }
+                if(nTemperature < m_nMinTemp)
+                {
+                    m_nMinTemp = m_nTemperature;
+                    Wimax4GManager.mService.setMinTemperature(m_nTemperature);
+                }
+            }
+            catch(RemoteException e) { }
+        }
+
+        public int describeContents()
+        {
+            return 0;
+        }
+
+        public int getCurrent()
+        {
+            return m_nTemperature;
+        }
+
+        public float getWimaxRadioTemperature()
+        {
+            return (float)m_nTemperature;
+        }
+
+        public boolean resetMinMax()
+        {
+            try
+            {
+                Wimax4GManager.mService.setMaxTemperature(-9999);
+                Wimax4GManager.mService.setMinTemperature(9999);
+            }
+            catch(RemoteException e) { }
+            return true;
+        }
+
+        public boolean getWimaxIdleMode()
+        {
+            return m_nIdleMode != 0;
+        }
+
+        public boolean getWimaxSleepMode()
+        {
+            return m_nSleepMode != 0;
+        }
+
+        public long getWimaxIdleModeTimer()
+        {
+            return (long)m_nIdleModeTimer;
+        }
+
+        public boolean getPseudoIdentityEnabled()
+        {
+            return m_nPseudoMode != 0;
+        }
+
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder("WimaxRadioInfoTemperature: ");
+            builder.append("Temperature: ").append(m_nTemperature).append(", IdleMode: ").append(m_nIdleMode).append(", SleepMode: ").append(m_nSleepMode).append(", IdleModeTimer").append(m_nIdleModeTimer).append(", m_nMaxTemp").append(m_nMaxTemp).append(", m_nMinTemp").append(m_nMinTemp).append(", PseudoMode").append(m_nPseudoMode);
+            return builder.toString();
+        }
+
+        public void writeToParcel(Parcel dest, int flags)
+        {
+            dest.writeInt(m_nTemperature);
+            dest.writeInt(m_nIdleMode);
+            dest.writeInt(m_nSleepMode);
+            dest.writeInt(m_nIdleModeTimer);
+            dest.writeInt(m_nPseudoMode);
+            dest.writeInt(m_nMaxTemp);
+            dest.writeInt(m_nMinTemp);
+        }
+
+        protected void finalize()
+            throws Throwable
+        {
+            try
+            {
+                Wimax4GManager.mService.setMaxTemperature(m_nMaxTemp);
+                Wimax4GManager.mService.setMinTemperature(m_nMinTemp);
+            }
+            catch(RemoteException e) { }
+            super.finalize();
+        }
+
+        int m_nIdleMode;
+        int m_nSleepMode;
+        int m_nIdleModeTimer;
+        int m_nPseudoMode;
+        public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+            public WimaxRadioInfoTemperature createFromParcel(Parcel in)
+            {
+                WimaxRadioInfoTemperature radioInfo = new WimaxRadioInfoTemperature();
+                radioInfo.m_nTemperature = in.readInt();
+                radioInfo.m_nIdleMode = in.readInt();
+                radioInfo.m_nSleepMode = in.readInt();
+                radioInfo.m_nIdleModeTimer = in.readInt();
+                radioInfo.m_nPseudoMode = in.readInt();
+                radioInfo.m_nMaxTemp = in.readInt();
+                radioInfo.m_nMinTemp = in.readInt();
+                return radioInfo;
+            }
+
+            public WimaxRadioInfoTemperature[] newArray(int size)
+            {
+                return new WimaxRadioInfoTemperature[size];
+            }
+
+        };
+
+
+        WimaxRadioInfoTemperature()
+        {
+        }
+    }
+
+
+    public Wimax4GManager()
+    {
+        if(mService == null)
+        {
+            IBinder b = ServiceManager.getService("WiMax");
+            mService = IWimax4GManager.Stub.asInterface(b);
+        }
+    }
+
+    public static synchronized Wimax4GManager getInstance()
+    {
+        if(instance == null)
+            instance = new Wimax4GManager();
+        return instance;
+    }
+
+    public Wimax4GManager(IWimax4GManager service, Handler handler)
+    {
+        mService = service;
+        mHandler = handler;
+        instance = this;
+    }
+
+    public int connectDefaultNetwork()
+    {
+        int nWimaxEnabledState = get4GState();
+        if(nWimaxEnabledState == 3 || nWimaxEnabledState == 2)
+        {
+            if(m_bLog)
+                Log.w("Wimax4GManager", "[connectDefaultNetwork] already enabled");
+            setLastError(5);
+            return 5;
+        } else
+        {
+            set4GEnabled(true);
+            return 0;
+        }
+    }
+
+    public boolean disconnect()
+    {
+        int nWimaxEnabledState = get4GState();
+        if(nWimaxEnabledState == 3 || nWimaxEnabledState == 2)
+            try
+            {
+                return mService.disconnect();
+            }
+            catch(RemoteException e)
+            {
+                return false;
+            }
+        else
+            return false;
+    }
+
+    public boolean reassociate()
+    {
+        try
+        {
+            return mService.reassociate();
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public boolean reconnect()
+    {
+        try
+        {
+            return mService.reconnect();
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public Wimax4GInfo getConnectionInfo()
+    {
+        try
+        {
+            return mService.getConnectionInfo();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public android.net.fourG.net4GManager.ConnectionStatistics createConnectionStatistics()
+    {
+        try
+        {
+            return mService.createConnectionStatistics();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public Wimax4GDeviceInfo getDeviceInformation()
+    {
+        try
+        {
+            return mService.getDeviceInformation();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public DhcpInfo getDhcpInfo()
+    {
+        try
+        {
+            return mService.getDhcpInfo();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public boolean set4GEnabled(boolean enabled)
+    {
+        try
+        {
+            return mService.set4GEnabled(enabled);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public boolean is4GEnabled()
+    {
+        return get4GState() == 3;
+    }
+
+    public int[] getNetworkEntryCompleteTimes()
+    {
+        try
+        {
+            return mService.getNetworkEntryCompleteTimes();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public void getNeighborList()
+    {
+        try
+        {
+            mService.getNeighborList();
+        }
+        catch(RemoteException e) { }
+    }
+
+    public android.net.fourG.net4GManager.RadioInfoTemperature getRadioInfoTemperature()
+    {
+        try
+        {
+            return mService.getRadioInfoTemperatureResponse();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public void getRadioInfo()
+    {
+        try
+        {
+            mService.getRadioInfoTemperature();
+        }
+        catch(RemoteException e)
+        {
+            return;
+        }
+    }
+
+    public int getWorkModeState()
+    {
+        try
+        {
+            return mService.getWorkModeState();
+        }
+        catch(RemoteException e)
+        {
+            return 0;
+        }
+    }
+
+    public boolean setWorkModeState(int workMode)
+    {
+        try
+        {
+            return mService.setWorkModeState(workMode);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public void getMruList()
+    {
+        if(m_bLog)
+            Log.d("getMruList", "getMruList entered");
+        try
+        {
+            mService.getMruList();
+        }
+        catch(RemoteException e) { }
+    }
+
+    public List getMruListRsp()
+    {
+        if(m_bLog)
+            Log.d("getMruListRsp", "getMruListRsp entered");
+        try
+        {
+            return mService.getMruListRsp();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public boolean getMruUpdate(List list, int nSize)
+    {
+        if(m_bLog)
+            Log.d("getMruUpdate", (new StringBuilder()).append("getMruUpdate nSize : ").append(nSize).toString());
+        try
+        {
+            if(nSize == 0)
+                return mService.getMruUpdate("", nSize);
+            int nListSize = list.size();
+            if(nSize != nListSize)
+                return false;
+            String strUpdate = "";
+            for(int i = 0; i < nSize; i++)
+            {
+                MruList temp = (MruList)list.get(i);
+                int nCF = temp.getCenterfrequency();
+                strUpdate = (new StringBuilder()).append(strUpdate).append(nCF).toString();
+                strUpdate = (new StringBuilder()).append(strUpdate).append("#").toString();
+                byte bw = temp.getBW();
+                strUpdate = (new StringBuilder()).append(strUpdate).append(bw).toString();
+                strUpdate = (new StringBuilder()).append(strUpdate).append("#").toString();
+                byte fft = temp.getFFTSize();
+                strUpdate = (new StringBuilder()).append(strUpdate).append(fft).toString();
+                strUpdate = (new StringBuilder()).append(strUpdate).append("#@").toString();
+            }
+
+            return mService.getMruUpdate(strUpdate, nSize);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public void setMruWorking(boolean bWorking)
+    {
+        try
+        {
+            mService.setMruWorking(bWorking);
+        }
+        catch(RemoteException e) { }
+    }
+
+    public boolean getPersistedWimaxEnabled()
+    {
+        try
+        {
+            return mService.getPersistedWimaxEnabled();
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public int get4GState()
+    {
+        try
+        {
+            return mService.get4GState();
+        }
+        catch(RemoteException e)
+        {
+            return 4;
+        }
+    }
+
+    public void setWimax4GState(int nWimax4GState)
+    {
+        try
+        {
+            mService.setWimaxStatus(nWimax4GState);
+        }
+        catch(RemoteException e) { }
+    }
+
+    public WimaxState getWimaxState()
+    {
+        try
+        {
+            return mService.getWimaxState();
+        }
+        catch(RemoteException e)
+        {
+            return WimaxState.UNKNOWN;
+        }
+    }
+
+    public int getWimaxStateDetail()
+    {
+        try
+        {
+            return mService.getWimaxStateDetail();
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public List getAvailableNetworks()
+    {
+        try
+        {
+            return mService.getAvailableNetworks();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public void enableLogLevel(int nLoglevel)
+    {
+        try
+        {
+            mService.enableLogLevel(nLoglevel);
+        }
+        catch(RemoteException e) { }
+    }
+
+    public static int calculateSignalLevel(int rssi, int numLevels)
+    {
+        return calculateSignalLevel(rssi, 0, numLevels);
+    }
+
+    public static int calculateSignalLevel(int nRSSI, int nCINR, int numLevels)
+    {
+        if(numLevels != 4)
+        {
+            return -1;
+        } else
+        {
+            int dwRssiStep = 0;
+            dwRssiStep = CheckRSSILevel(nRSSI);
+            return dwRssiStep;
+        }
+    }
+
+    private static int CheckRSSILevel(int nRSSI)
+    {
+        if(nRSSI < -93)
+            return 0;
+        if(-93 <= nRSSI && nRSSI < -75)
+            return 1;
+        if(-75 <= nRSSI && nRSSI < -60)
+            return 2;
+        return -60 > nRSSI ? 3 : 3;
+    }
+
+    public void calWiMAXThroughput(boolean bstart)
+    {
+        try
+        {
+            mService.calWiMAXThroughput(bstart);
+        }
+        catch(RemoteException e)
+        {
+            return;
+        }
+    }
+
+    public int connect(String homeNspName, String roamingNspName, String userName, String passWord)
+    {
+        if(roamingNspName != "")
+            return -1;
+        try
+        {
+            return mService.connect(homeNspName, roamingNspName, userName, passWord);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public boolean setRoamingEnabled(boolean enabled)
+    {
+        try
+        {
+            return mService.setRoamingEnabled(enabled);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public boolean isRoamingEnabled()
+    {
+        try
+        {
+            return mService.isRoamingEnabled();
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public boolean startScan()
+    {
+        return startScan(false);
+    }
+
+    public boolean startScan(boolean bUserReq)
+    {
+        try
+        {
+            return mService.startScan(bUserReq);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public void release_sWakeLock()
+    {
+        try
+        {
+            mService.release_sWakeLock();
+        }
+        catch(RemoteException e) { }
+    }
+
+    public int getWimaxMode()
+    {
+        try
+        {
+            return mService.getWimaxMode();
+        }
+        catch(RemoteException e)
+        {
+            return 0;
+        }
+    }
+
+    public int setWimaxMode(int nMode, boolean enable)
+    {
+        try
+        {
+            return mService.setWimaxMode(nMode, enable);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public boolean checkUSBstate()
+    {
+        try
+        {
+            return mService.checkUSBstate();
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public Wimax4GBaseStationInfo getConnectedNSP()
+    {
+        try
+        {
+            return mService.getConnectedNSP();
+        }
+        catch(RemoteException e)
+        {
+            return null;
+        }
+    }
+
+    public int makeOdbTlvData(byte pBuffer[], int nBufferIndex, int wBufferLen, int wTag, int wLength, byte pbValue[])
+    {
+        try
+        {
+            return mService.makeOdbTlvData(pBuffer, nBufferIndex, wBufferLen, wTag, wLength, pbValue);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public int OdbReadReq(byte tlvDataArray[])
+    {
+        try
+        {
+            return mService.OdbReadReq(tlvDataArray);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public int OdbWriteReq(byte tlvDataArray[])
+    {
+        try
+        {
+            return mService.OdbWriteReq(tlvDataArray);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public int OdbUpdateReq()
+    {
+        try
+        {
+            return mService.OdbUpdateReq();
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public int OdbAddReq(byte tlvDataArray[])
+    {
+        try
+        {
+            return mService.OdbAddReq(tlvDataArray);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public int OdbDeleteReq(byte tlvDataArray[])
+    {
+        try
+        {
+            return mService.OdbDeleteReq(tlvDataArray);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public boolean setFactoryDefault(int nType)
+    {
+        try
+        {
+            return mService.setFactoryDefault(nType);
+        }
+        catch(RemoteException e)
+        {
+            return false;
+        }
+    }
+
+    public int setVirtualIdleWhileAPsleep(byte bMode)
+    {
+        if(bMode == 0 || bMode == 1)
+            try
+            {
+                return mService.setVirtualIdleWhileAPsleep(bMode);
+            }
+            catch(RemoteException e)
+            {
+                return -1;
+            }
+        else
+            return -2;
+    }
+
+    public int getNetworkConnectionSetting()
+    {
+        try
+        {
+            return mService.getNetworkConnectionSetting();
+        }
+        catch(RemoteException e)
+        {
+            return 0;
+        }
+    }
+
+    public int saveStaticIP(String ip, String gateway, String netmask, String dns1, String dns2)
+    {
+        try
+        {
+            return mService.saveStaticIP(ip, gateway, netmask, dns1, dns2);
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public String readStaticIP(int nIndex)
+    {
+        try
+        {
+            return mService.readStaticIP(nIndex);
+        }
+        catch(RemoteException e)
+        {
+            return "error";
+        }
+    }
+
+    public int deleteStaticIP()
+    {
+        try
+        {
+            return mService.deleteStaticIP();
+        }
+        catch(RemoteException e)
+        {
+            return -1;
+        }
+    }
+
+    public Lock createLock(int lockType, String tag)
+    {
+        return new Lock(lockType, tag);
+    }
+
+    public Lock createLock(String tag)
+    {
+        return new Lock(1, tag);
+    }
+
+    public MulticastLock createMulticastLock(String tag)
+    {
+        return new MulticastLock(tag);
+    }
+
+    public void enableLog(boolean flag)
+    {
+        m_bLog = flag;
+    }
+
+    private static final String TAG = "Wimax4GManager";
+    public static final String WIMAX_SERVICE = "WiMax";
+    public static final int NETWORK_SPRINT = 0;
+    public static final int NETWORK_PRIVATE = 1;
+    public static boolean m_bLog;
+    public static final int WORK_MODE_STATE_0 = 0;
+    public static final int WORK_MODE_STATE_1 = 1;
+    public static final int WORK_MODE_STATE_2 = 2;
+    public static final int WORK_MODE_STATE_3 = 3;
+    public static final String NET_4G_HANDOVER_COMPLETE_ACTION = "android.net.wimax.NET_4G_HANDOVER_COMPLETE_ACTION";
+    public static final String EXTRA_4G_CURRENT_SERVING_BS = "newBSID";
+    public static final String FREQUENCY_CHANGED_ACTION = "android.net.wimax.FREQUENCY_CHANGED";
+    public static final String EXTRA_NEW_FREQUENCY = "newFrequency";
+    public static final String MODE_CHANGED_ACTION = "android.net.wimax.MODE_CHANGED";
+    public static final String EXTRA_MODE = "usbMode";
+    public static final int WIMAX_MODE_NORMAL = 0;
+    public static final int WIMAX_MODE_TETHERED = 1;
+    public static final int WIMAX_MODE_BACKHAUL = 2;
+    public static final int WIMAX_MODE_DM_NORMAL = 3;
+    public static final int WIMAX_MODE_DM_BACKHAUL = 4;
+    protected static IWimax4GManager mService;
+    protected static Wimax4GManager instance;
+    protected static Handler mHandler;
+    public static final String NETWORK_IP_CHANGED_ACTION = "android.net.wimax.NETWORK_IP_CHANGED";
+    public static final String TIME_CHANGED_ACTION = "android.net.wimax.TIME_CHANGED";
+    public static final String EXTRA_NEW_TIME = "newTime";
+    public static final String SIGNAL_LEVEL_CHANGED_ACTION = "android.net.wimax.SIGNAL_LEVEL_CHANGED";
+    public static final String EXTRA_NEW_SIGNAL_LEVEL = "newSignalLevel";
+    public static final String WIMAX_DHCP_TIME_ACTION = "android.net.wimax.WIMAX_DHCP_TIME";
+    public static final String EXTRA_WIMAX_DHCP_TIME = "newDHCPTime";
+    public static final String EXTRA_WIMAX_MRU_LIST = "MruList";
+    public static final String EXTRA_WIMAX_MRU_UPDATE_SUBTYPE = "subType";
+    public static final String EXTRA_WIMAX_MRU_UPDATE_ERRORVALUE = "ErrorValue";
+    public static final String EXTRA_WIMAX_OMADM_RESP_DATA = "WimaxOMADMRespData";
+    public static final String EXTRA_WIMAX_OMADM_RESP_STATE = "WimaxOMADMRespState";
+    public static final String WIMAX_RESPONSE_ACTION = "android.net.wimax.WIMAX_RESPONSE";
+    public static final String EXTRA_WIMAX_RADIO_INFO = "WimaxRadioInfo";
+    public static final String WIMAX_WORK_MODE_ACTION = "android.net.wimax.WIMAX_WORK_MODE";
+    public static final String EXTRA_WIMAX_WORK_MODE = "WimaxWorkMode";
+    public static final String WIMAX_DATA_THROUGHPUT_ACTION = "android.net.wimax.WIMAX_DATA_THROUGHPUT";
+    public static final String EXTRA_TIME = "android.net.wimax.EXTRA_TIME";
+    public static final String EXTRA_DATA = "android.net.wimax.EXTRA_DATA";
+    public static final String EXTRA_THROUGHPUT = "android.net.wimax.EXTRA_THROUGHPUT";
+    public static final String WIMAX_AUTH_ERROR = "android.net.wimax.WIMAX_AUTH_ERROR";
+    public static final String EXTRA_WIMAX_AUTH_ERROR = "auth_error";
+    public static final int WIMAX_FACTORY_DEFAULT_GDB = 0;
+    public static final int WIMAX_FACTORY_DEFAULT_ODB = 1;
+    public static final int WIMAX_FACTORY_DEFAULT_ALL = 2;
+    public static final String EXTRA_NETWORK_INFO = "networkInfo";
+    public static final String EXTRA_LINK_PROPERTIES = "linkProperties";
+    public static final String EXTRA_LINK_CAPABILITIES = "linkCapabilities";
+    public static final int WIMAX_VI_WHILE_AP_SLEEP = 0;
+    public static final int WIMAX_IDLE_WHILE_AP_SLEEP = 1;
+
+
+
+
+
+
+
+}

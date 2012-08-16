@@ -1,0 +1,2069 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   IWimax4GManager.java
+
+package android.net.fourG.wimax;
+
+import android.net.DhcpInfo;
+import android.os.*;
+import java.util.List;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            Wimax4GManager, Wimax4GDeviceInfo, WimaxState, Wimax4GInfo, 
+//            Wimax4GBaseStationInfo, Wimax4GConfiguration, MruList
+
+public interface IWimax4GManager
+    extends IInterface
+{
+    public static abstract class Stub extends Binder
+        implements IWimax4GManager
+    {
+        private static class Proxy
+            implements IWimax4GManager
+        {
+
+            public IBinder asBinder()
+            {
+                return mRemote;
+            }
+
+            public String getInterfaceDescriptor()
+            {
+                return "android.net.fourG.wimax.IWimax4GManager";
+            }
+
+            public boolean disconnect()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(1, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean reconnect()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(2, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean reassociate()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(3, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public Wimax4GManager.WimaxConnectionStatistics createConnectionStatistics()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                Wimax4GManager.WimaxConnectionStatistics _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(4, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (Wimax4GManager.WimaxConnectionStatistics)Wimax4GManager.WimaxConnectionStatistics.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public Wimax4GDeviceInfo getDeviceInformation()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                Wimax4GDeviceInfo _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(5, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (Wimax4GDeviceInfo)Wimax4GDeviceInfo.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public DhcpInfo getDhcpInfo()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                DhcpInfo _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(6, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (DhcpInfo)DhcpInfo.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public List getAvailableNetworks()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                List _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(7, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.createTypedArrayList(Wimax4GConfiguration.CREATOR);
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean set4GEnabled(boolean enabled)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(enabled ? 1 : 0);
+                    mRemote.transact(8, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int get4GState()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(9, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public WimaxState getWimaxState()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                WimaxState _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(10, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (WimaxState)WimaxState.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int getWimaxStateDetail()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(11, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean releaseLock(IBinder lock)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeStrongBinder(lock);
+                    mRemote.transact(12, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean acquireLock(IBinder lock, int lockType, String tag)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeStrongBinder(lock);
+                    _data.writeInt(lockType);
+                    _data.writeString(tag);
+                    mRemote.transact(13, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void acquireMulticastLock(IBinder binder, String tag)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeStrongBinder(binder);
+                    _data.writeString(tag);
+                    mRemote.transact(14, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public void releaseMulticastLock()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(15, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public Wimax4GInfo getConnectionInfo()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                Wimax4GInfo _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(16, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (Wimax4GInfo)Wimax4GInfo.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int[] getNetworkEntryCompleteTimes()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result[];
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(17, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.createIntArray();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void getNeighborList()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(18, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public void getRadioInfoTemperature()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(19, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public Wimax4GManager.WimaxRadioInfoTemperature getRadioInfoTemperatureResponse()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                Wimax4GManager.WimaxRadioInfoTemperature _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(20, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (Wimax4GManager.WimaxRadioInfoTemperature)Wimax4GManager.WimaxRadioInfoTemperature.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int getWorkModeState()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(21, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean setWorkModeState(int workMode)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(workMode);
+                    mRemote.transact(22, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void getMruList()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(23, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public List getMruListRsp()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                List _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(24, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.createTypedArrayList(MruList.CREATOR);
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean getMruUpdate(String strUpdate, int nSize)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeString(strUpdate);
+                    _data.writeInt(nSize);
+                    mRemote.transact(25, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void setMruWorking(boolean bWorking)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(bWorking ? 1 : 0);
+                    mRemote.transact(26, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public boolean getPersistedWimaxEnabled()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(27, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void setWimaxStatus(int nWimax4GState)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(nWimax4GState);
+                    mRemote.transact(28, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public int connect(String homeNspName, String roamingNspName, String userName, String passWord)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeString(homeNspName);
+                    _data.writeString(roamingNspName);
+                    _data.writeString(userName);
+                    _data.writeString(passWord);
+                    mRemote.transact(29, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean startScan(boolean bUserReq)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(bUserReq ? 1 : 0);
+                    mRemote.transact(30, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void release_sWakeLock()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(31, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public int getWimaxMode()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(32, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int setWimaxMode(int nMode, boolean enable)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(nMode);
+                    _data.writeInt(enable ? 1 : 0);
+                    mRemote.transact(33, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean checkUSBstate()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(34, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public Wimax4GBaseStationInfo getConnectedNSP()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                Wimax4GBaseStationInfo _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(35, _data, _reply, 0);
+                    _reply.readException();
+                    if(0 != _reply.readInt())
+                        _result = (Wimax4GBaseStationInfo)Wimax4GBaseStationInfo.CREATOR.createFromParcel(_reply);
+                    else
+                        _result = null;
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int makeOdbTlvData(byte pBuffer[], int nBufferIndex, int wBufferLen, int wTag, int wLength, byte pbValue[])
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByteArray(pBuffer);
+                    _data.writeInt(nBufferIndex);
+                    _data.writeInt(wBufferLen);
+                    _data.writeInt(wTag);
+                    _data.writeInt(wLength);
+                    _data.writeByteArray(pbValue);
+                    mRemote.transact(36, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                    _reply.readByteArray(pBuffer);
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int OdbReadReq(byte tlvDataArray[])
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByteArray(tlvDataArray);
+                    mRemote.transact(37, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int OdbWriteReq(byte tlvDataArray[])
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByteArray(tlvDataArray);
+                    mRemote.transact(38, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int OdbUpdateReq()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(39, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int OdbAddReq(byte tlvDataArray[])
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByteArray(tlvDataArray);
+                    mRemote.transact(40, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int OdbDeleteReq(byte tlvDataArray[])
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByteArray(tlvDataArray);
+                    mRemote.transact(41, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean setFactoryDefault(int nType)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(nType);
+                    mRemote.transact(42, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int setVirtualIdleWhileAPsleep(byte bMode)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeByte(bMode);
+                    mRemote.transact(43, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int getNetworkConnectionSetting()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(44, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int saveStaticIP(String ip, String gateway, String netmask, String dns1, String dns2)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeString(ip);
+                    _data.writeString(gateway);
+                    _data.writeString(netmask);
+                    _data.writeString(dns1);
+                    _data.writeString(dns2);
+                    mRemote.transact(45, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public String readStaticIP(int nIndex)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                String _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(nIndex);
+                    mRemote.transact(46, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readString();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int deleteStaticIP()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(47, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void calWiMAXThroughput(boolean bstart)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(bstart ? 1 : 0);
+                    mRemote.transact(48, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public int getMinTemperature()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(49, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public int getMaxTemperature()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                int _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(50, _data, _reply, 0);
+                    _reply.readException();
+                    _result = _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean setMinTemperature(int temp)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(temp);
+                    mRemote.transact(51, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean setMaxTemperature(int temp)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(temp);
+                    mRemote.transact(52, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public void enableLogLevel(int nLoglevel)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(nLoglevel);
+                    mRemote.transact(53, _data, _reply, 0);
+                    _reply.readException();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+            }
+
+            public boolean setRoamingEnabled(boolean enabled)
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    _data.writeInt(enabled ? 1 : 0);
+                    mRemote.transact(54, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            public boolean isRoamingEnabled()
+                throws RemoteException
+            {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try
+                {
+                    _data.writeInterfaceToken("android.net.fourG.wimax.IWimax4GManager");
+                    mRemote.transact(55, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                }
+                finally
+                {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
+
+            private IBinder mRemote;
+
+            Proxy(IBinder remote)
+            {
+                mRemote = remote;
+            }
+        }
+
+
+        public static IWimax4GManager asInterface(IBinder obj)
+        {
+            if(obj == null)
+                return null;
+            IInterface iin = obj.queryLocalInterface("android.net.fourG.wimax.IWimax4GManager");
+            if(iin != null && (iin instanceof IWimax4GManager))
+                return (IWimax4GManager)iin;
+            else
+                return new Proxy(obj);
+        }
+
+        public IBinder asBinder()
+        {
+            return this;
+        }
+
+        public boolean onTransact(int code, Parcel data, Parcel reply, int flags)
+            throws RemoteException
+        {
+            switch(code)
+            {
+            case 1598968902: 
+            {
+                reply.writeString("android.net.fourG.wimax.IWimax4GManager");
+                return true;
+            }
+
+            case 1: // '\001'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = disconnect();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 2: // '\002'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = reconnect();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 3: // '\003'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = reassociate();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 4: // '\004'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                Wimax4GManager.WimaxConnectionStatistics _result = createConnectionStatistics();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 5: // '\005'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                Wimax4GDeviceInfo _result = getDeviceInformation();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 6: // '\006'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                DhcpInfo _result = getDhcpInfo();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 7: // '\007'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                List _result = getAvailableNetworks();
+                reply.writeNoException();
+                reply.writeTypedList(_result);
+                return true;
+            }
+
+            case 8: // '\b'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _arg0 = 0 != data.readInt();
+                boolean _result = set4GEnabled(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 9: // '\t'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = get4GState();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 10: // '\n'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                WimaxState _result = getWimaxState();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 11: // '\013'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getWimaxStateDetail();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 12: // '\f'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                IBinder _arg0 = data.readStrongBinder();
+                boolean _result = releaseLock(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 13: // '\r'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                IBinder _arg0 = data.readStrongBinder();
+                int _arg1 = data.readInt();
+                String _arg2 = data.readString();
+                boolean _result = acquireLock(_arg0, _arg1, _arg2);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 14: // '\016'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                IBinder _arg0 = data.readStrongBinder();
+                String _arg1 = data.readString();
+                acquireMulticastLock(_arg0, _arg1);
+                reply.writeNoException();
+                return true;
+            }
+
+            case 15: // '\017'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                releaseMulticastLock();
+                reply.writeNoException();
+                return true;
+            }
+
+            case 16: // '\020'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                Wimax4GInfo _result = getConnectionInfo();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 17: // '\021'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result[] = getNetworkEntryCompleteTimes();
+                reply.writeNoException();
+                reply.writeIntArray(_result);
+                return true;
+            }
+
+            case 18: // '\022'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                getNeighborList();
+                reply.writeNoException();
+                return true;
+            }
+
+            case 19: // '\023'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                getRadioInfoTemperature();
+                reply.writeNoException();
+                return true;
+            }
+
+            case 20: // '\024'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                Wimax4GManager.WimaxRadioInfoTemperature _result = getRadioInfoTemperatureResponse();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 21: // '\025'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getWorkModeState();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 22: // '\026'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                boolean _result = setWorkModeState(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 23: // '\027'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                getMruList();
+                reply.writeNoException();
+                return true;
+            }
+
+            case 24: // '\030'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                List _result = getMruListRsp();
+                reply.writeNoException();
+                reply.writeTypedList(_result);
+                return true;
+            }
+
+            case 25: // '\031'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                String _arg0 = data.readString();
+                int _arg1 = data.readInt();
+                boolean _result = getMruUpdate(_arg0, _arg1);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 26: // '\032'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _arg0 = 0 != data.readInt();
+                setMruWorking(_arg0);
+                reply.writeNoException();
+                return true;
+            }
+
+            case 27: // '\033'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = getPersistedWimaxEnabled();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 28: // '\034'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                setWimaxStatus(_arg0);
+                reply.writeNoException();
+                return true;
+            }
+
+            case 29: // '\035'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                String _arg0 = data.readString();
+                String _arg1 = data.readString();
+                String _arg2 = data.readString();
+                String _arg3 = data.readString();
+                int _result = connect(_arg0, _arg1, _arg2, _arg3);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 30: // '\036'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _arg0 = 0 != data.readInt();
+                boolean _result = startScan(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 31: // '\037'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                release_sWakeLock();
+                reply.writeNoException();
+                return true;
+            }
+
+            case 32: // ' '
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getWimaxMode();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 33: // '!'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                boolean _arg1 = 0 != data.readInt();
+                int _result = setWimaxMode(_arg0, _arg1);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 34: // '"'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = checkUSBstate();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 35: // '#'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                Wimax4GBaseStationInfo _result = getConnectedNSP();
+                reply.writeNoException();
+                if(_result != null)
+                {
+                    reply.writeInt(1);
+                    _result.writeToParcel(reply, 1);
+                } else
+                {
+                    reply.writeInt(0);
+                }
+                return true;
+            }
+
+            case 36: // '$'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0[] = data.createByteArray();
+                int _arg1 = data.readInt();
+                int _arg2 = data.readInt();
+                int _arg3 = data.readInt();
+                int _arg4 = data.readInt();
+                byte _arg5[] = data.createByteArray();
+                int _result = makeOdbTlvData(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                reply.writeByteArray(_arg0);
+                return true;
+            }
+
+            case 37: // '%'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0[] = data.createByteArray();
+                int _result = OdbReadReq(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 38: // '&'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0[] = data.createByteArray();
+                int _result = OdbWriteReq(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 39: // '\''
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = OdbUpdateReq();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 40: // '('
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0[] = data.createByteArray();
+                int _result = OdbAddReq(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 41: // ')'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0[] = data.createByteArray();
+                int _result = OdbDeleteReq(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 42: // '*'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                boolean _result = setFactoryDefault(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 43: // '+'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                byte _arg0 = data.readByte();
+                int _result = setVirtualIdleWhileAPsleep(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 44: // ','
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getNetworkConnectionSetting();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 45: // '-'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                String _arg0 = data.readString();
+                String _arg1 = data.readString();
+                String _arg2 = data.readString();
+                String _arg3 = data.readString();
+                String _arg4 = data.readString();
+                int _result = saveStaticIP(_arg0, _arg1, _arg2, _arg3, _arg4);
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 46: // '.'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                String _result = readStaticIP(_arg0);
+                reply.writeNoException();
+                reply.writeString(_result);
+                return true;
+            }
+
+            case 47: // '/'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = deleteStaticIP();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 48: // '0'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _arg0 = 0 != data.readInt();
+                calWiMAXThroughput(_arg0);
+                reply.writeNoException();
+                return true;
+            }
+
+            case 49: // '1'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getMinTemperature();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 50: // '2'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _result = getMaxTemperature();
+                reply.writeNoException();
+                reply.writeInt(_result);
+                return true;
+            }
+
+            case 51: // '3'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                boolean _result = setMinTemperature(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 52: // '4'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                boolean _result = setMaxTemperature(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 53: // '5'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                int _arg0 = data.readInt();
+                enableLogLevel(_arg0);
+                reply.writeNoException();
+                return true;
+            }
+
+            case 54: // '6'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _arg0 = 0 != data.readInt();
+                boolean _result = setRoamingEnabled(_arg0);
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+
+            case 55: // '7'
+            {
+                data.enforceInterface("android.net.fourG.wimax.IWimax4GManager");
+                boolean _result = isRoamingEnabled();
+                reply.writeNoException();
+                reply.writeInt(_result ? 1 : 0);
+                return true;
+            }
+            }
+            return super.onTransact(code, data, reply, flags);
+        }
+
+        private static final String DESCRIPTOR = "android.net.fourG.wimax.IWimax4GManager";
+        static final int TRANSACTION_disconnect = 1;
+        static final int TRANSACTION_reconnect = 2;
+        static final int TRANSACTION_reassociate = 3;
+        static final int TRANSACTION_createConnectionStatistics = 4;
+        static final int TRANSACTION_getDeviceInformation = 5;
+        static final int TRANSACTION_getDhcpInfo = 6;
+        static final int TRANSACTION_getAvailableNetworks = 7;
+        static final int TRANSACTION_set4GEnabled = 8;
+        static final int TRANSACTION_get4GState = 9;
+        static final int TRANSACTION_getWimaxState = 10;
+        static final int TRANSACTION_getWimaxStateDetail = 11;
+        static final int TRANSACTION_releaseLock = 12;
+        static final int TRANSACTION_acquireLock = 13;
+        static final int TRANSACTION_acquireMulticastLock = 14;
+        static final int TRANSACTION_releaseMulticastLock = 15;
+        static final int TRANSACTION_getConnectionInfo = 16;
+        static final int TRANSACTION_getNetworkEntryCompleteTimes = 17;
+        static final int TRANSACTION_getNeighborList = 18;
+        static final int TRANSACTION_getRadioInfoTemperature = 19;
+        static final int TRANSACTION_getRadioInfoTemperatureResponse = 20;
+        static final int TRANSACTION_getWorkModeState = 21;
+        static final int TRANSACTION_setWorkModeState = 22;
+        static final int TRANSACTION_getMruList = 23;
+        static final int TRANSACTION_getMruListRsp = 24;
+        static final int TRANSACTION_getMruUpdate = 25;
+        static final int TRANSACTION_setMruWorking = 26;
+        static final int TRANSACTION_getPersistedWimaxEnabled = 27;
+        static final int TRANSACTION_setWimaxStatus = 28;
+        static final int TRANSACTION_connect = 29;
+        static final int TRANSACTION_startScan = 30;
+        static final int TRANSACTION_release_sWakeLock = 31;
+        static final int TRANSACTION_getWimaxMode = 32;
+        static final int TRANSACTION_setWimaxMode = 33;
+        static final int TRANSACTION_checkUSBstate = 34;
+        static final int TRANSACTION_getConnectedNSP = 35;
+        static final int TRANSACTION_makeOdbTlvData = 36;
+        static final int TRANSACTION_OdbReadReq = 37;
+        static final int TRANSACTION_OdbWriteReq = 38;
+        static final int TRANSACTION_OdbUpdateReq = 39;
+        static final int TRANSACTION_OdbAddReq = 40;
+        static final int TRANSACTION_OdbDeleteReq = 41;
+        static final int TRANSACTION_setFactoryDefault = 42;
+        static final int TRANSACTION_setVirtualIdleWhileAPsleep = 43;
+        static final int TRANSACTION_getNetworkConnectionSetting = 44;
+        static final int TRANSACTION_saveStaticIP = 45;
+        static final int TRANSACTION_readStaticIP = 46;
+        static final int TRANSACTION_deleteStaticIP = 47;
+        static final int TRANSACTION_calWiMAXThroughput = 48;
+        static final int TRANSACTION_getMinTemperature = 49;
+        static final int TRANSACTION_getMaxTemperature = 50;
+        static final int TRANSACTION_setMinTemperature = 51;
+        static final int TRANSACTION_setMaxTemperature = 52;
+        static final int TRANSACTION_enableLogLevel = 53;
+        static final int TRANSACTION_setRoamingEnabled = 54;
+        static final int TRANSACTION_isRoamingEnabled = 55;
+
+        public Stub()
+        {
+            attachInterface(this, "android.net.fourG.wimax.IWimax4GManager");
+        }
+    }
+
+
+    public abstract boolean disconnect()
+        throws RemoteException;
+
+    public abstract boolean reconnect()
+        throws RemoteException;
+
+    public abstract boolean reassociate()
+        throws RemoteException;
+
+    public abstract Wimax4GManager.WimaxConnectionStatistics createConnectionStatistics()
+        throws RemoteException;
+
+    public abstract Wimax4GDeviceInfo getDeviceInformation()
+        throws RemoteException;
+
+    public abstract DhcpInfo getDhcpInfo()
+        throws RemoteException;
+
+    public abstract List getAvailableNetworks()
+        throws RemoteException;
+
+    public abstract boolean set4GEnabled(boolean flag)
+        throws RemoteException;
+
+    public abstract int get4GState()
+        throws RemoteException;
+
+    public abstract WimaxState getWimaxState()
+        throws RemoteException;
+
+    public abstract int getWimaxStateDetail()
+        throws RemoteException;
+
+    public abstract boolean releaseLock(IBinder ibinder)
+        throws RemoteException;
+
+    public abstract boolean acquireLock(IBinder ibinder, int i, String s)
+        throws RemoteException;
+
+    public abstract void acquireMulticastLock(IBinder ibinder, String s)
+        throws RemoteException;
+
+    public abstract void releaseMulticastLock()
+        throws RemoteException;
+
+    public abstract Wimax4GInfo getConnectionInfo()
+        throws RemoteException;
+
+    public abstract int[] getNetworkEntryCompleteTimes()
+        throws RemoteException;
+
+    public abstract void getNeighborList()
+        throws RemoteException;
+
+    public abstract void getRadioInfoTemperature()
+        throws RemoteException;
+
+    public abstract Wimax4GManager.WimaxRadioInfoTemperature getRadioInfoTemperatureResponse()
+        throws RemoteException;
+
+    public abstract int getWorkModeState()
+        throws RemoteException;
+
+    public abstract boolean setWorkModeState(int i)
+        throws RemoteException;
+
+    public abstract void getMruList()
+        throws RemoteException;
+
+    public abstract List getMruListRsp()
+        throws RemoteException;
+
+    public abstract boolean getMruUpdate(String s, int i)
+        throws RemoteException;
+
+    public abstract void setMruWorking(boolean flag)
+        throws RemoteException;
+
+    public abstract boolean getPersistedWimaxEnabled()
+        throws RemoteException;
+
+    public abstract void setWimaxStatus(int i)
+        throws RemoteException;
+
+    public abstract int connect(String s, String s1, String s2, String s3)
+        throws RemoteException;
+
+    public abstract boolean startScan(boolean flag)
+        throws RemoteException;
+
+    public abstract void release_sWakeLock()
+        throws RemoteException;
+
+    public abstract int getWimaxMode()
+        throws RemoteException;
+
+    public abstract int setWimaxMode(int i, boolean flag)
+        throws RemoteException;
+
+    public abstract boolean checkUSBstate()
+        throws RemoteException;
+
+    public abstract Wimax4GBaseStationInfo getConnectedNSP()
+        throws RemoteException;
+
+    public abstract int makeOdbTlvData(byte abyte0[], int i, int j, int k, int l, byte abyte1[])
+        throws RemoteException;
+
+    public abstract int OdbReadReq(byte abyte0[])
+        throws RemoteException;
+
+    public abstract int OdbWriteReq(byte abyte0[])
+        throws RemoteException;
+
+    public abstract int OdbUpdateReq()
+        throws RemoteException;
+
+    public abstract int OdbAddReq(byte abyte0[])
+        throws RemoteException;
+
+    public abstract int OdbDeleteReq(byte abyte0[])
+        throws RemoteException;
+
+    public abstract boolean setFactoryDefault(int i)
+        throws RemoteException;
+
+    public abstract int setVirtualIdleWhileAPsleep(byte byte0)
+        throws RemoteException;
+
+    public abstract int getNetworkConnectionSetting()
+        throws RemoteException;
+
+    public abstract int saveStaticIP(String s, String s1, String s2, String s3, String s4)
+        throws RemoteException;
+
+    public abstract String readStaticIP(int i)
+        throws RemoteException;
+
+    public abstract int deleteStaticIP()
+        throws RemoteException;
+
+    public abstract void calWiMAXThroughput(boolean flag)
+        throws RemoteException;
+
+    public abstract int getMinTemperature()
+        throws RemoteException;
+
+    public abstract int getMaxTemperature()
+        throws RemoteException;
+
+    public abstract boolean setMinTemperature(int i)
+        throws RemoteException;
+
+    public abstract boolean setMaxTemperature(int i)
+        throws RemoteException;
+
+    public abstract void enableLogLevel(int i)
+        throws RemoteException;
+
+    public abstract boolean setRoamingEnabled(boolean flag)
+        throws RemoteException;
+
+    public abstract boolean isRoamingEnabled()
+        throws RemoteException;
+}

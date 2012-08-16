@@ -1,0 +1,168 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   net4GBaseStationInfo.java
+
+package android.net.fourG;
+
+import android.os.Parcelable;
+
+public abstract class net4GBaseStationInfo
+    implements Parcelable
+{
+    public static final class NSP_NETWORK_TYPE extends Enum
+    {
+
+        public static NSP_NETWORK_TYPE[] values()
+        {
+            return (NSP_NETWORK_TYPE[])$VALUES.clone();
+        }
+
+        public static NSP_NETWORK_TYPE valueOf(String name)
+        {
+            return (NSP_NETWORK_TYPE)Enum.valueOf(android.net.fourG.net4GBaseStationInfo$NSP_NETWORK_TYPE.class, name);
+        }
+
+        public static final NSP_NETWORK_TYPE NSP_NETWORK_TYPE_HOME;
+        public static final NSP_NETWORK_TYPE NSP_NETWORK_TYPE_PARTNER;
+        public static final NSP_NETWORK_TYPE NSP_NETWORK_TYPE_ROAMING_PARTNER;
+        public static final NSP_NETWORK_TYPE NSP_NETWORK_TYPE_UNKNOWN;
+        private static final NSP_NETWORK_TYPE $VALUES[];
+
+        static 
+        {
+            NSP_NETWORK_TYPE_HOME = new NSP_NETWORK_TYPE("NSP_NETWORK_TYPE_HOME", 0);
+            NSP_NETWORK_TYPE_PARTNER = new NSP_NETWORK_TYPE("NSP_NETWORK_TYPE_PARTNER", 1);
+            NSP_NETWORK_TYPE_ROAMING_PARTNER = new NSP_NETWORK_TYPE("NSP_NETWORK_TYPE_ROAMING_PARTNER", 2);
+            NSP_NETWORK_TYPE_UNKNOWN = new NSP_NETWORK_TYPE("NSP_NETWORK_TYPE_UNKNOWN", 3);
+            $VALUES = (new NSP_NETWORK_TYPE[] {
+                NSP_NETWORK_TYPE_HOME, NSP_NETWORK_TYPE_PARTNER, NSP_NETWORK_TYPE_ROAMING_PARTNER, NSP_NETWORK_TYPE_UNKNOWN
+            });
+        }
+
+        private NSP_NETWORK_TYPE(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+
+    public net4GBaseStationInfo()
+    {
+    }
+
+    public NSP_NETWORK_TYPE getNetworkType()
+    {
+        if(!m_bIsConnected)
+            return NSP_NETWORK_TYPE.NSP_NETWORK_TYPE_UNKNOWN;
+        switch(networkType)
+        {
+        case 0: // '\0'
+            return NSP_NETWORK_TYPE.NSP_NETWORK_TYPE_HOME;
+
+        case 1: // '\001'
+            return NSP_NETWORK_TYPE.NSP_NETWORK_TYPE_PARTNER;
+
+        case 2: // '\002'
+            return NSP_NETWORK_TYPE.NSP_NETWORK_TYPE_ROAMING_PARTNER;
+        }
+        return NSP_NETWORK_TYPE.NSP_NETWORK_TYPE_UNKNOWN;
+    }
+
+    public long getFrequencyUplink()
+    {
+        if(!m_bIsConnected)
+            return -1L;
+        else
+            return m_nFrequencyUplink;
+    }
+
+    public long getFrequencyDownlink()
+    {
+        if(!m_bIsConnected)
+            return -1L;
+        else
+            return m_nFrequencyDownlink;
+    }
+
+    public String getBSID()
+    {
+        return m_strBSID;
+    }
+
+    void setIsConnected(boolean bIsConnected)
+    {
+        m_bIsConnected = bIsConnected;
+    }
+
+    public boolean isConnected()
+    {
+        return m_bIsConnected;
+    }
+
+    public int getRSSI()
+    {
+        if(!m_bIsConnected)
+            return -1;
+        else
+            return m_nRSSI;
+    }
+
+    public int getCINR()
+    {
+        if(!m_bIsConnected)
+            return -1;
+        else
+            return m_nCINR;
+    }
+
+    public int getNspId()
+    {
+        if(!m_bIsConnected)
+            return -1;
+        else
+            return m_lNspId;
+    }
+
+    float getLongitude()
+    {
+        return 999F;
+    }
+
+    float getLatitude()
+    {
+        return 999F;
+    }
+
+    int getRTD()
+    {
+        return -1;
+    }
+
+    int getRTDMeasurementAge()
+    {
+        return -1;
+    }
+
+    int getRTDMeasurementError()
+    {
+        return -1;
+    }
+
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer("net4GBaseStationInfo: ");
+        String none = "<none>";
+        sb.append(", BSID: ").append(m_strBSID != null ? m_strBSID : none).append(", IsConnected: ").append(!m_bIsConnected ? "false" : "true").append(", RSSI: ").append(m_nRSSI).append(", CINR: ").append(m_nCINR).append(", Nsp ID: ").append(m_lNspId).append(", Frequency: ").append(m_nFrequencyDownlink);
+        return sb.toString();
+    }
+
+    protected String m_strBSID;
+    protected boolean m_bIsConnected;
+    protected int m_nRSSI;
+    protected int m_nCINR;
+    protected int m_lNspId;
+    protected long m_nFrequencyUplink;
+    protected long m_nFrequencyDownlink;
+    protected int networkType;
+}

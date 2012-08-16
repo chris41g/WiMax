@@ -1,0 +1,428 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   WimaxNative.java
+
+package android.net.fourG.wimax;
+
+import android.net.DhcpInfo;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            MruList, Wimax4GBaseStationInfo, Wimax4GConfiguration, DeviceStatusInfo, 
+//            Wimax4GManager, Wimax4GDeviceInfo
+
+public class WimaxNative
+{
+
+    public WimaxNative()
+    {
+    }
+
+    private static native void classInitNative();
+
+    public static native byte[] getErrorString();
+
+    public static native boolean loadDriver(byte byte0);
+
+    public static native boolean startWimax();
+
+    public static native boolean stopWimax();
+
+    public static native void setBackhaulMode(boolean flag);
+
+    public static native void setDMMode(boolean flag);
+
+    public static native void setRctMode(boolean flag);
+
+    public static native int connectmWimax(String s, String s1, String s2, int i, String s3);
+
+    public static native boolean scanCommand();
+
+    public static native boolean disconnectWimax();
+
+    public static native String getMacAddressCommand();
+
+    public static native boolean doDhcpRequest(DhcpInfo dhcpinfo);
+
+    public static native boolean setWimaxTethered(byte byte0);
+
+    public static native String getLinkInfo();
+
+    public static native boolean getLinkState();
+
+    public static native String getConnectionTime();
+
+    public static native void setEnableLog(boolean flag);
+
+    public static native boolean IdleReq();
+
+    public static native boolean VirtualIdleReq(int i, byte byte0);
+
+    public static native boolean IpObtained();
+
+    public static native int[] getNetworkEntryCompleteTimes();
+
+    public static native boolean OdbDefaultReq();
+
+    public static native int OdbReadReq(byte abyte0[]);
+
+    public static native int OdbWriteReq(byte abyte0[]);
+
+    public static native int OdbUpdateReq();
+
+    public static native int OdbAddReq(byte abyte0[]);
+
+    public static native int OdbDeleteReq(byte abyte0[]);
+
+    public static native boolean setVirtualIdleWhileAPsleep(byte byte0);
+
+    public static native void setDeviceStateToVirtualIdle();
+
+    public static native void setDeviceStateToInitComplete();
+
+    public static native void setLinkInfo(boolean flag);
+
+    public static void enableLog(boolean flag)
+    {
+        m_bLog = flag;
+        setEnableLog(flag);
+    }
+
+    public static void SetHandler(Handler handler)
+    {
+        mHandler = handler;
+    }
+
+    private static synchronized void NotifyDeviceStatusChange(int deviceStatus, int statusReason, int connectionProgressInfo)
+    {
+        if(dsInfo != null)
+        {
+            dsInfo.setDeviceStatus(deviceStatus, statusReason, connectionProgressInfo);
+            mHandler.obtainMessage(0, dsInfo).sendToTarget();
+        }
+    }
+
+    private static synchronized void NotifyDeviceInsertRemove(boolean cardPresence)
+    {
+        mHandler.obtainMessage(1, Integer.valueOf(cardPresence ? 1 : 0)).sendToTarget();
+    }
+
+    private static synchronized void NotifyPowerManagement(int powerState)
+    {
+        mHandler.obtainMessage(2, powerState, -1, Integer.valueOf(0)).sendToTarget();
+    }
+
+    private static synchronized void NotifyMruListMsg(int nSize, String strMruList)
+    {
+        if(nSize == 0)
+        {
+            mHandler.obtainMessage(4, 0, -1, mMruListRsp).sendToTarget();
+            return;
+        }
+        if(m_bLog)
+            Log.d("WimaxNative:", (new StringBuilder()).append("NotifyMruListMsg strMruList = ").append(strMruList).toString());
+        StringTokenizer st = new StringTokenizer(strMruList, "@");
+        int nCF = 0;
+        byte BW = 0;
+        byte FFTSize = 0;
+        for(int i = 0; i < nSize; i++)
+        {
+            if(!st.hasMoreTokens())
+                continue;
+            String temp = st.nextToken();
+            if(temp != null)
+            {
+                StringTokenizer stList = new StringTokenizer(temp, "#");
+                if(stList.hasMoreTokens())
+                {
+                    nCF = Integer.parseInt(stList.nextToken());
+                    if(m_bLog)
+                        Log.d("WimaxNative :", (new StringBuilder()).append("NotifyMruListMsg nCF = ").append(nCF).toString());
+                    if(stList.hasMoreTokens())
+                    {
+                        BW = Byte.parseByte(stList.nextToken());
+                        if(m_bLog)
+                            Log.d("WimaxNative :", (new StringBuilder()).append("NotifyMruListMsg BW = ").append(BW).toString());
+                        if(stList.hasMoreTokens())
+                        {
+                            FFTSize = Byte.parseByte(stList.nextToken());
+                            if(m_bLog)
+                                Log.d("WimaxNative :", (new StringBuilder()).append("NotifyMruListMsg FFTSize = ").append(FFTSize).toString());
+                        }
+                    }
+                }
+            }
+            MruList mruList = new MruList();
+            mruList.setValue(nCF, BW, FFTSize);
+            mMruListRsp.add(mruList);
+        }
+
+        if(m_bLog)
+            Log.d("WimaxNative Ends:", "NotifyMruListMsg  = ");
+        mHandler.obtainMessage(4, 0, -1, mMruListRsp).sendToTarget();
+    }
+
+    private static synchronized void NotifyWimaxBaseStationInfoRsp(int nSize, String strWimaxBSList)
+    {
+        if(nSize == 0)
+        {
+            mHandler.obtainMessage(10, 0, -1, wimaxBSList).sendToTarget();
+            if(m_bLog)
+                Log.d("WimaxNative:CSAHOO", (new StringBuilder()).append("NotifyWimaxBaseStationInfoRsp nSize = ").append(nSize).toString());
+            return;
+        }
+        wimaxBSList.clear();
+        int m_Frequency = 0;
+        int m_FFTSize = 0;
+        int m_BandWidth = 0;
+        int m_CINR = 0;
+        int m_RSSI = 0;
+        int m_Preamble = 0;
+        String m_NapId = "";
+        String sBsid = null;
+        StringTokenizer st = new StringTokenizer(strWimaxBSList, "@");
+        for(int i = 0; i < nSize; i++)
+        {
+            if(m_bLog)
+                Log.d("WimaxNative", (new StringBuilder()).append(" i = ").append(i).toString());
+            if(!st.hasMoreTokens())
+                continue;
+            String temp = st.nextToken();
+            if(temp != null)
+            {
+                StringTokenizer stList = new StringTokenizer(temp, "#");
+                if(stList.hasMoreTokens())
+                {
+                    m_Frequency = Integer.parseInt(stList.nextToken());
+                    if(m_bLog)
+                        Log.d("WimaxNative", (new StringBuilder()).append(" m_Frequency = ").append(m_Frequency).toString());
+                    if(stList.hasMoreTokens())
+                    {
+                        m_FFTSize = Integer.parseInt(stList.nextToken());
+                        if(m_bLog)
+                            Log.d("WimaxNative", (new StringBuilder()).append(" m_FFTSize = ").append(m_FFTSize).toString());
+                        if(stList.hasMoreTokens())
+                        {
+                            m_BandWidth = Integer.parseInt(stList.nextToken());
+                            if(m_bLog)
+                                Log.d("WimaxNative", (new StringBuilder()).append(" m_BandWidth = ").append(m_BandWidth).toString());
+                            if(stList.hasMoreTokens())
+                            {
+                                m_CINR = Integer.parseInt(stList.nextToken());
+                                if(m_bLog)
+                                    Log.d("WimaxNative", (new StringBuilder()).append(" m_CINR = ").append(m_CINR).toString());
+                                if(stList.hasMoreTokens())
+                                {
+                                    m_RSSI = Integer.parseInt(stList.nextToken());
+                                    if(m_bLog)
+                                        Log.d("WimaxNative", (new StringBuilder()).append(" m_RSSI = ").append(m_RSSI).toString());
+                                    if(stList.hasMoreTokens())
+                                    {
+                                        m_Preamble = Integer.parseInt(stList.nextToken());
+                                        if(m_bLog)
+                                            Log.d("WimaxNative", (new StringBuilder()).append(" m_Preamble = ").append(m_Preamble).toString());
+                                        if(stList.hasMoreTokens())
+                                        {
+                                            m_NapId = stList.nextToken();
+                                            if(m_bLog)
+                                                Log.d("WimaxNative", (new StringBuilder()).append(" m_NapId = ").append(m_NapId).toString());
+                                            if(stList.hasMoreTokens())
+                                            {
+                                                sBsid = stList.nextToken();
+                                                if(m_bLog)
+                                                    Log.d("WimaxNative", (new StringBuilder()).append(" sBsid = ").append(sBsid).toString());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Wimax4GBaseStationInfo wimaxBSInfo = new Wimax4GBaseStationInfo();
+            wimaxBSInfo.setValue(m_CINR, 0, "", m_RSSI, false, sBsid, m_NapId, m_Preamble, 0, "", m_Frequency, m_Frequency, 0);
+            if(m_bLog)
+                Log.d("WimaxNative", (new StringBuilder()).append(" m_Frequency: ").append(m_Frequency).append(" m_FFTSize: ").append(m_FFTSize).append(" m_BandWidth: ").append(m_BandWidth).append(" m_CINR: ").append(m_CINR).append(" m_RSSI: ").append(m_RSSI).append(" m_Preamble: ").append(m_Preamble).append(" m_NapId: ").append(m_NapId).append(" sBsid: ").append(sBsid).toString());
+            wimaxBSList.add(wimaxBSInfo);
+        }
+
+        mHandler.obtainMessage(10, 0, -1, wimaxBSList).sendToTarget();
+    }
+
+    private static synchronized void NotifyMruUpdateMsg(int subType, int ErrorValue)
+    {
+        mHandler.obtainMessage(5, subType, ErrorValue, Integer.valueOf(0)).sendToTarget();
+    }
+
+    private static synchronized void NotifyAuthFailMsg(int errorCode, String errorMsg)
+    {
+        mHandler.obtainMessage(3, errorCode, -1, errorMsg).sendToTarget();
+    }
+
+    private static synchronized void NotifyOdbMngResponse(byte respDataArray[], int nLen, int odbMngState)
+    {
+        if(m_bLog)
+            Log.d("WimaxNative NotifyOdbMngResponse", (new StringBuilder()).append(" nLen: ").append(nLen).append(" odbMngState: ").append(odbMngState).toString());
+        if(nLen == 0)
+        {
+            byte bDataArray[] = new byte[1];
+            bDataArray[0] = 1;
+            ByteBuffer respData = ByteBuffer.allocate(bDataArray.length);
+            respData.put(bDataArray, 0, bDataArray.length);
+            mHandler.obtainMessage(6, 1, odbMngState, respData).sendToTarget();
+        } else
+        if(nLen == -1)
+        {
+            byte bDataArray[] = new byte[1];
+            bDataArray[0] = 2;
+            ByteBuffer respData = ByteBuffer.allocate(bDataArray.length);
+            respData.put(bDataArray, 0, bDataArray.length);
+            mHandler.obtainMessage(6, 0, -1, respData).sendToTarget();
+        } else
+        if(respDataArray.length > 0)
+        {
+            byte bDataArray[] = new byte[1];
+            bDataArray[0] = 1;
+            ByteBuffer respData = ByteBuffer.allocate(respDataArray.length + bDataArray.length);
+            respData.put(bDataArray, 0, bDataArray.length);
+            respData.put(respDataArray, 0, respDataArray.length);
+            mHandler.obtainMessage(6, 1, odbMngState, respData).sendToTarget();
+        }
+    }
+
+    private static synchronized void NotifyRadioInfoResponse(String strRadioInfoList)
+    {
+        int nTemperature = 0;
+        int nbIdleMode = 0;
+        int nSleepMode = 0;
+        int nIdleModeTimer = 0;
+        int nPseudoId = 0;
+        StringTokenizer st = new StringTokenizer(strRadioInfoList, "@");
+        if(st.hasMoreTokens())
+        {
+            String temp = st.nextToken();
+            if(temp != null)
+            {
+                StringTokenizer stList = new StringTokenizer(temp, "#");
+                if(stList.hasMoreTokens())
+                {
+                    nTemperature = Integer.parseInt(stList.nextToken());
+                    if(stList.hasMoreTokens())
+                    {
+                        nbIdleMode = Integer.parseInt(stList.nextToken());
+                        if(stList.hasMoreTokens())
+                        {
+                            nSleepMode = Integer.parseInt(stList.nextToken());
+                            if(stList.hasMoreTokens())
+                            {
+                                nIdleModeTimer = Integer.parseInt(stList.nextToken());
+                                nPseudoId = Integer.parseInt(stList.nextToken());
+                            }
+                        }
+                    }
+                }
+            }
+            radioInfo.setValue(nTemperature, nbIdleMode, nSleepMode, nIdleModeTimer, nPseudoId);
+            mHandler.obtainMessage(7).sendToTarget();
+        }
+    }
+
+    private static synchronized void NotifyLinkWeakInformation(int subType)
+    {
+        mHandler.obtainMessage(8, subType, -1, Integer.valueOf(0)).sendToTarget();
+    }
+
+    public static native boolean getAvailableNetworks(Wimax4GConfiguration wimax4gconfiguration);
+
+    public static native int getConnectedNSP(Wimax4GBaseStationInfo wimax4gbasestationinfo);
+
+    public static native boolean getDeviceInformation(Wimax4GDeviceInfo wimax4gdeviceinfo);
+
+    public static void setAvailableList(List list)
+    {
+        mAvailableList = list;
+    }
+
+    public static native boolean getMruList();
+
+    public static native boolean getMruUpdate(int ai[], byte abyte0[], byte abyte1[], int i);
+
+    public static native boolean getNeighborList();
+
+    public static native boolean getRadioInfo();
+
+    public static native int[] getOdbConfigData();
+
+    public static native boolean setRoamingEnabled(boolean flag);
+
+    public static native boolean isRoamingEnabled();
+
+    private static synchronized void AddAvailableList(Wimax4GConfiguration Config)
+    {
+        Wimax4GConfiguration tmp = new Wimax4GConfiguration();
+        tmp.setValue(Config.getNspId(), Config.getNspName(), Config.getUsername(), Config.getPassword());
+        mAvailableList.add(tmp);
+    }
+
+    private static synchronized void getUTCTime()
+    {
+        java.util.Date now = Calendar.getInstance().getTime();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyMMddHHmmss");
+        String strUTCtime = formatter.format(now);
+        if(m_bLog)
+            Log.d("UTCTIME", (new StringBuilder()).append("time : ").append(strUTCtime).toString());
+        mHandler.sendEmptyMessageDelayed(9, 10L);
+    }
+
+    public static native void SendUTCTime(String s);
+
+    public static native void setEnableLogLevel(char c);
+
+    protected void finalize()
+        throws Throwable
+    {
+        try
+        {
+            destroyNative();
+        }
+        finally
+        {
+            super.finalize();
+        }
+    }
+
+    private native void destroyNative();
+
+    static final int EVENT_DEVICE_STATUS = 0;
+    static final int EVENT_CARD_PRESENCE = 1;
+    static final int EVENT_POWER_STATE = 2;
+    static final int EVENT_AUTH_FAIL_MSG = 3;
+    static final int EVENT_MRU_LIST_MSG = 4;
+    static final int EVENT_MRU_UPDATE_MSG = 5;
+    static final int EVENT_OMADM_RESPONSE = 6;
+    static final int EVENT_RADIO_INFO_RESPONSE = 7;
+    static final int EVENT_LINK_WEAK_INFO = 8;
+    static final int EVENT_AUTH_UTC_TIME = 9;
+    static final int EVENT_BS_INFO_RESPONSE = 10;
+    private static boolean m_bLog;
+    private static Handler mHandler;
+    private static List mAvailableList;
+    public static List mMruListRsp = new ArrayList();
+    public static byte mOdbReadRsp[];
+    public static Wimax4GManager.WimaxRadioInfoTemperature radioInfo = new Wimax4GManager.WimaxRadioInfoTemperature();
+    public static List wimaxBSList = new ArrayList();
+    public static DeviceStatusInfo dsInfo = new DeviceStatusInfo();
+
+    static 
+    {
+        System.loadLibrary("SECmWiMAXcAPI");
+        classInitNative();
+    }
+}

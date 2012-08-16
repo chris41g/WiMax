@@ -1,0 +1,75 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   INet4GManager.java
+
+package android.net.fourG;
+
+import android.os.*;
+
+public interface INet4GManager
+    extends IInterface
+{
+    public static abstract class Stub extends Binder
+        implements INet4GManager
+    {
+        private static class Proxy
+            implements INet4GManager
+        {
+
+            public IBinder asBinder()
+            {
+                return mRemote;
+            }
+
+            public String getInterfaceDescriptor()
+            {
+                return "android.net.fourG.INet4GManager";
+            }
+
+            private IBinder mRemote;
+
+            Proxy(IBinder remote)
+            {
+                mRemote = remote;
+            }
+        }
+
+
+        public static INet4GManager asInterface(IBinder obj)
+        {
+            if(obj == null)
+                return null;
+            IInterface iin = obj.queryLocalInterface("android.net.fourG.INet4GManager");
+            if(iin != null && (iin instanceof INet4GManager))
+                return (INet4GManager)iin;
+            else
+                return new Proxy(obj);
+        }
+
+        public IBinder asBinder()
+        {
+            return this;
+        }
+
+        public boolean onTransact(int code, Parcel data, Parcel reply, int flags)
+            throws RemoteException
+        {
+            switch(code)
+            {
+            case 1598968902: 
+                reply.writeString("android.net.fourG.INet4GManager");
+                return true;
+            }
+            return super.onTransact(code, data, reply, flags);
+        }
+
+        private static final String DESCRIPTOR = "android.net.fourG.INet4GManager";
+
+        public Stub()
+        {
+            attachInterface(this, "android.net.fourG.INet4GManager");
+        }
+    }
+
+}

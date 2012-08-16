@@ -1,0 +1,385 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   net4GInfo.java
+
+package android.net.fourG;
+
+import android.net.NetworkInfo;
+import android.net.fourG.wimax.DeviceStatusInfo;
+import android.os.Parcelable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.EnumMap;
+
+// Referenced classes of package android.net.fourG:
+//            net4GSupplicantState, net4GBaseStationInfo
+
+public abstract class net4GInfo
+    implements Parcelable
+{
+    public static final class LINK_STATE_REASON extends Enum
+    {
+
+        public static LINK_STATE_REASON[] values()
+        {
+            return (LINK_STATE_REASON[])$VALUES.clone();
+        }
+
+        public static LINK_STATE_REASON valueOf(String name)
+        {
+            return (LINK_STATE_REASON)Enum.valueOf(android.net.fourG.net4GInfo$LINK_STATE_REASON.class, name);
+        }
+
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_NW_CONNECTION;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_RANGING;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_EAP_AUTHENTICATION;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_3WAY_HANDSHAKE;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_REGISTRATION;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_DEREGISTRATION;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_NO_COVERAGE_AVAILABLE;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_ROAMING_NOT_ALLOWED;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_PROVISIONING_DATA_ERROR;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_RADIO_POLICY_VIOLATION;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_RADIO_OFF;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_SIGNAL_LOSS;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_DISCONNECT_CALLED;
+        public static final LINK_STATE_REASON LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE;
+        private static final LINK_STATE_REASON $VALUES[];
+
+        static 
+        {
+            LINK_ST_REASON_FAILURE_NW_CONNECTION = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_NW_CONNECTION", 0);
+            LINK_ST_REASON_FAILURE_RANGING = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_RANGING", 1);
+            LINK_ST_REASON_FAILURE_EAP_AUTHENTICATION = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_EAP_AUTHENTICATION", 2);
+            LINK_ST_REASON_FAILURE_3WAY_HANDSHAKE = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_3WAY_HANDSHAKE", 3);
+            LINK_ST_REASON_FAILURE_REGISTRATION = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_REGISTRATION", 4);
+            LINK_ST_REASON_FAILURE_DEREGISTRATION = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_DEREGISTRATION", 5);
+            LINK_ST_REASON_FAILURE_NO_COVERAGE_AVAILABLE = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_NO_COVERAGE_AVAILABLE", 6);
+            LINK_ST_REASON_FAILURE_ROAMING_NOT_ALLOWED = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_ROAMING_NOT_ALLOWED", 7);
+            LINK_ST_REASON_FAILURE_PROVISIONING_DATA_ERROR = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_PROVISIONING_DATA_ERROR", 8);
+            LINK_ST_REASON_FAILURE_RADIO_POLICY_VIOLATION = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_RADIO_POLICY_VIOLATION", 9);
+            LINK_ST_REASON_FAILURE_RADIO_OFF = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_RADIO_OFF", 10);
+            LINK_ST_REASON_FAILURE_SIGNAL_LOSS = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_SIGNAL_LOSS", 11);
+            LINK_ST_REASON_FAILURE_DISCONNECT_CALLED = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_DISCONNECT_CALLED", 12);
+            LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE = new LINK_STATE_REASON("LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE", 13);
+            $VALUES = (new LINK_STATE_REASON[] {
+                LINK_ST_REASON_FAILURE_NW_CONNECTION, LINK_ST_REASON_FAILURE_RANGING, LINK_ST_REASON_FAILURE_EAP_AUTHENTICATION, LINK_ST_REASON_FAILURE_3WAY_HANDSHAKE, LINK_ST_REASON_FAILURE_REGISTRATION, LINK_ST_REASON_FAILURE_DEREGISTRATION, LINK_ST_REASON_FAILURE_NO_COVERAGE_AVAILABLE, LINK_ST_REASON_FAILURE_ROAMING_NOT_ALLOWED, LINK_ST_REASON_FAILURE_PROVISIONING_DATA_ERROR, LINK_ST_REASON_FAILURE_RADIO_POLICY_VIOLATION, 
+                LINK_ST_REASON_FAILURE_RADIO_OFF, LINK_ST_REASON_FAILURE_SIGNAL_LOSS, LINK_ST_REASON_FAILURE_DISCONNECT_CALLED, LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE
+            });
+        }
+
+        private LINK_STATE_REASON(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+    public static final class LINK_STATE_DETAIL extends Enum
+    {
+
+        public static LINK_STATE_DETAIL[] values()
+        {
+            return (LINK_STATE_DETAIL[])$VALUES.clone();
+        }
+
+        public static LINK_STATE_DETAIL valueOf(String name)
+        {
+            return (LINK_STATE_DETAIL)Enum.valueOf(android.net.fourG.net4GInfo$LINK_STATE_DETAIL.class, name);
+        }
+
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_DL_SYNC;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_HANDOVER_SYNC;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_UL_ACQUISITION;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_RANGING;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_HANDOVER_RANGING;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_CAPABILITIES_NEGOTIATION;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_EAP_AUTHENTICATION;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_3WAY_HANDSHAKE;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_REGISTRATION;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_DHCP;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_OPERATIONAL;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_SLEEP;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_IDLE;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_DEREGISTRATION;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_CONNECTION_FAILURE;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_ABORTED;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_NOT_CONNECTED;
+        public static final LINK_STATE_DETAIL LINK_ST_DETAIL_UNDEFINED;
+        private static final LINK_STATE_DETAIL $VALUES[];
+
+        static 
+        {
+            LINK_ST_DETAIL_DL_SYNC = new LINK_STATE_DETAIL("LINK_ST_DETAIL_DL_SYNC", 0);
+            LINK_ST_DETAIL_HANDOVER_SYNC = new LINK_STATE_DETAIL("LINK_ST_DETAIL_HANDOVER_SYNC", 1);
+            LINK_ST_DETAIL_UL_ACQUISITION = new LINK_STATE_DETAIL("LINK_ST_DETAIL_UL_ACQUISITION", 2);
+            LINK_ST_DETAIL_RANGING = new LINK_STATE_DETAIL("LINK_ST_DETAIL_RANGING", 3);
+            LINK_ST_DETAIL_HANDOVER_RANGING = new LINK_STATE_DETAIL("LINK_ST_DETAIL_HANDOVER_RANGING", 4);
+            LINK_ST_DETAIL_CAPABILITIES_NEGOTIATION = new LINK_STATE_DETAIL("LINK_ST_DETAIL_CAPABILITIES_NEGOTIATION", 5);
+            LINK_ST_DETAIL_EAP_AUTHENTICATION = new LINK_STATE_DETAIL("LINK_ST_DETAIL_EAP_AUTHENTICATION", 6);
+            LINK_ST_DETAIL_3WAY_HANDSHAKE = new LINK_STATE_DETAIL("LINK_ST_DETAIL_3WAY_HANDSHAKE", 7);
+            LINK_ST_DETAIL_REGISTRATION = new LINK_STATE_DETAIL("LINK_ST_DETAIL_REGISTRATION", 8);
+            LINK_ST_DETAIL_DHCP = new LINK_STATE_DETAIL("LINK_ST_DETAIL_DHCP", 9);
+            LINK_ST_DETAIL_OPERATIONAL = new LINK_STATE_DETAIL("LINK_ST_DETAIL_OPERATIONAL", 10);
+            LINK_ST_DETAIL_SLEEP = new LINK_STATE_DETAIL("LINK_ST_DETAIL_SLEEP", 11);
+            LINK_ST_DETAIL_IDLE = new LINK_STATE_DETAIL("LINK_ST_DETAIL_IDLE", 12);
+            LINK_ST_DETAIL_DEREGISTRATION = new LINK_STATE_DETAIL("LINK_ST_DETAIL_DEREGISTRATION", 13);
+            LINK_ST_DETAIL_CONNECTION_FAILURE = new LINK_STATE_DETAIL("LINK_ST_DETAIL_CONNECTION_FAILURE", 14);
+            LINK_ST_DETAIL_ABORTED = new LINK_STATE_DETAIL("LINK_ST_DETAIL_ABORTED", 15);
+            LINK_ST_DETAIL_NOT_CONNECTED = new LINK_STATE_DETAIL("LINK_ST_DETAIL_NOT_CONNECTED", 16);
+            LINK_ST_DETAIL_UNDEFINED = new LINK_STATE_DETAIL("LINK_ST_DETAIL_UNDEFINED", 17);
+            $VALUES = (new LINK_STATE_DETAIL[] {
+                LINK_ST_DETAIL_DL_SYNC, LINK_ST_DETAIL_HANDOVER_SYNC, LINK_ST_DETAIL_UL_ACQUISITION, LINK_ST_DETAIL_RANGING, LINK_ST_DETAIL_HANDOVER_RANGING, LINK_ST_DETAIL_CAPABILITIES_NEGOTIATION, LINK_ST_DETAIL_EAP_AUTHENTICATION, LINK_ST_DETAIL_3WAY_HANDSHAKE, LINK_ST_DETAIL_REGISTRATION, LINK_ST_DETAIL_DHCP, 
+                LINK_ST_DETAIL_OPERATIONAL, LINK_ST_DETAIL_SLEEP, LINK_ST_DETAIL_IDLE, LINK_ST_DETAIL_DEREGISTRATION, LINK_ST_DETAIL_CONNECTION_FAILURE, LINK_ST_DETAIL_ABORTED, LINK_ST_DETAIL_NOT_CONNECTED, LINK_ST_DETAIL_UNDEFINED
+            });
+        }
+
+        private LINK_STATE_DETAIL(String s, int i)
+        {
+            super(s, i);
+        }
+    }
+
+
+    public net4GInfo()
+    {
+        m_strBSID = "00:00:00:00:00:00";
+        m_nRssi = -9999;
+        m_nCinr = -9999;
+        m_net4GSupplicantState = net4GSupplicantState.UNINITIALIZED;
+        m_nIpAddress = 0;
+        m_nLinkSpeed = -1;
+        mLinkStateDetail = LINK_STATE_DETAIL.LINK_ST_DETAIL_NOT_CONNECTED;
+        mLinkStateReason = LINK_STATE_REASON.LINK_ST_REASON_FAILURE_UNKNOWN_CAUSE;
+        m_strMacAddress = "00:00:00:00:00:00";
+        m_nNetworkId = -1;
+        m_nTxPower = -9999;
+        m_n4GState = -1;
+        m_net4GBaseStationInfo = null;
+    }
+
+    public void setBSID(String strBSID)
+    {
+        m_strBSID = strBSID;
+    }
+
+    public String getBSID()
+    {
+        return m_strBSID;
+    }
+
+    public void setCinr(int nCinr)
+    {
+        m_nCinr = nCinr;
+    }
+
+    public int getCinr()
+    {
+        return m_nCinr;
+    }
+
+    public int getRssi()
+    {
+        return m_nRssi;
+    }
+
+    public void setRssi(int rssi)
+    {
+        m_nRssi = rssi;
+    }
+
+    public int getLinkSpeed()
+    {
+        return m_nLinkSpeed;
+    }
+
+    public void setLinkSpeed(int linkSpeed)
+    {
+        m_nLinkSpeed = linkSpeed;
+    }
+
+    public void setMacAddress(String macAddress)
+    {
+        m_strMacAddress = macAddress;
+    }
+
+    public String getMacAddress()
+    {
+        return m_strMacAddress;
+    }
+
+    public void setNetworkId(int id)
+    {
+        m_nNetworkId = id;
+    }
+
+    public int getNetworkId()
+    {
+        return m_nNetworkId;
+    }
+
+    public abstract net4GSupplicantState getSupplicantState();
+
+    public abstract void setSupplicantState(net4GSupplicantState net4gsupplicantstate);
+
+    public void setIpAddress(int address)
+    {
+        m_nIpAddress = address;
+    }
+
+    public int getIpAddress()
+    {
+        return m_nIpAddress;
+    }
+
+    public InetAddress getInetAddress()
+    {
+        byte addrBytes[] = new byte[4];
+        int addr = m_nIpAddress;
+        addrBytes[0] = (byte)(addr & 0xff);
+        addrBytes[1] = (byte)(addr >> 8 & 0xff);
+        addrBytes[2] = (byte)(addr >> 16 & 0xff);
+        addrBytes[3] = (byte)(addr >> 24 & 0xff);
+        InetAddress inetAddress;
+        try
+        {
+            inetAddress = InetAddress.getByAddress(addrBytes);
+        }
+        catch(UnknownHostException e)
+        {
+            return null;
+        }
+        return inetAddress;
+    }
+
+    public void setTxPower(int nTxPower)
+    {
+        m_nTxPower = nTxPower;
+    }
+
+    public int getTxPower()
+    {
+        return m_nTxPower;
+    }
+
+    public abstract net4GBaseStationInfo get4GBaseStationInfoServing();
+
+    public void set4GBaseStationInfo(net4GBaseStationInfo info)
+    {
+        m_net4GBaseStationInfo = info;
+    }
+
+    public void set4GState(int n4GState)
+    {
+        m_n4GState = n4GState;
+    }
+
+    public int get4GState()
+    {
+        return m_n4GState;
+    }
+
+    public static android.net.NetworkInfo.DetailedState getDetailedStateOf(net4GSupplicantState suppState)
+    {
+        return (android.net.NetworkInfo.DetailedState)stateMap.get(suppState);
+    }
+
+    static net4GSupplicantState valueOf(String stateName)
+    {
+        try
+        {
+            return net4GSupplicantState.valueOf(stateName.toUpperCase());
+        }
+        catch(IllegalArgumentException e)
+        {
+            return net4GSupplicantState.INVALID;
+        }
+    }
+
+    public void setLinkStateDetailed(LINK_STATE_DETAIL linkStateDetail)
+    {
+        mLinkStateDetail = linkStateDetail;
+    }
+
+    public static LINK_STATE_DETAIL getLinkStateDetailed()
+    {
+        return mLinkStateDetail;
+    }
+
+    void setLinkStateReason(LINK_STATE_REASON linkStateReason)
+    {
+        mLinkStateReason = linkStateReason;
+    }
+
+    public static LINK_STATE_REASON getLinkStateReason()
+    {
+        return mLinkStateReason;
+    }
+
+    static Class _mthclass$(String s)
+    {
+        try
+        {
+            return Class.forName(s);
+        }
+        catch(ClassNotFoundException classnotfoundexception)
+        {
+            throw new NoClassDefFoundError(classnotfoundexception.getMessage());
+        }
+    }
+
+    private static final EnumMap stateMap;
+    protected String m_strBSID;
+    protected int m_nRssi;
+    protected int m_nCinr;
+    protected net4GSupplicantState m_net4GSupplicantState;
+    protected int m_nIpAddress;
+    public static final String LINK_SPEED_UNITS = "Mbps";
+    protected int m_nLinkSpeed;
+    protected static LINK_STATE_DETAIL mLinkStateDetail;
+    protected static LINK_STATE_REASON mLinkStateReason;
+    protected String m_strMacAddress;
+    protected int m_nNetworkId;
+    protected int m_nTxPower;
+    protected int m_n4GState;
+    protected net4GBaseStationInfo m_net4GBaseStationInfo;
+    public static final EnumMap linkStateMap;
+
+    static 
+    {
+        stateMap = new EnumMap(android.net.fourG.net4GSupplicantState.class);
+        stateMap.put(net4GSupplicantState.DISCONNECTED, android.net.NetworkInfo.DetailedState.DISCONNECTED);
+        stateMap.put(net4GSupplicantState.INACTIVE, android.net.NetworkInfo.DetailedState.IDLE);
+        stateMap.put(net4GSupplicantState.SCANNING, android.net.NetworkInfo.DetailedState.SCANNING);
+        stateMap.put(net4GSupplicantState.ASSOCIATING, android.net.NetworkInfo.DetailedState.CONNECTING);
+        stateMap.put(net4GSupplicantState.ASSOCIATED, android.net.NetworkInfo.DetailedState.CONNECTED);
+        stateMap.put(net4GSupplicantState.HANDSHAKE, android.net.NetworkInfo.DetailedState.AUTHENTICATING);
+        stateMap.put(net4GSupplicantState.COMPLETED, android.net.NetworkInfo.DetailedState.OBTAINING_IPADDR);
+        stateMap.put(net4GSupplicantState.DORMANT, android.net.NetworkInfo.DetailedState.DISCONNECTED);
+        stateMap.put(net4GSupplicantState.UNINITIALIZED, android.net.NetworkInfo.DetailedState.IDLE);
+        stateMap.put(net4GSupplicantState.INVALID, android.net.NetworkInfo.DetailedState.FAILED);
+        linkStateMap = new EnumMap(android.net.fourG.wimax.DeviceStatusInfo$ConnectionProgressInfo.class);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Ranging, LINK_STATE_DETAIL.LINK_ST_DETAIL_RANGING);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.SBC, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.PKM, LINK_STATE_DETAIL.LINK_ST_DETAIL_EAP_AUTHENTICATION);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Registration, LINK_STATE_DETAIL.LINK_ST_DETAIL_REGISTRATION);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.DSX, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Registered, LINK_STATE_DETAIL.LINK_ST_DETAIL_OPERATIONAL);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Idle, LINK_STATE_DETAIL.LINK_ST_DETAIL_IDLE);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.IP_Renew, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.De_registration, LINK_STATE_DETAIL.LINK_ST_DETAIL_DEREGISTRATION);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Syncup_PHY, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Syncup_MAC, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.EAP_authentication_Device, LINK_STATE_DETAIL.LINK_ST_DETAIL_EAP_AUTHENTICATION);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.EAP_authentication_User, LINK_STATE_DETAIL.LINK_ST_DETAIL_EAP_AUTHENTICATION);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Timeout_Sync, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Timeout_NE, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Timeout_NDREG, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.IP_USB, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.CONNECTED_USB, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.RESUME_USB, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.SUSPEND_USB, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Met_Exit_Criteria, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+        linkStateMap.put(android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Abnormal_State, LINK_STATE_DETAIL.LINK_ST_DETAIL_UNDEFINED);
+    }
+}

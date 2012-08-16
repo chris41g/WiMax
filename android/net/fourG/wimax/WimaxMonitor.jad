@@ -1,0 +1,412 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   WimaxMonitor.java
+
+package android.net.fourG.wimax;
+
+import android.net.NetworkStateTracker;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+
+// Referenced classes of package android.net.fourG.wimax:
+//            DeviceStatusInfo, WimaxNative, WimaxStateTracker, WimaxState
+
+public class WimaxMonitor
+    implements android.os.Handler.Callback
+{
+    class EventHandler extends Handler
+    {
+
+        EventHandler(android.os.Handler.Callback callback)
+        {
+            super(callback);
+        }
+    }
+
+    class MonitorThread extends Thread
+    {
+
+        public void run()
+        {
+            if(m_bLog)
+                Log.d("WimaxMonitor", "<----- MonitorThread Start ----->");
+        }
+
+        public MonitorThread()
+        {
+            super("WimaxMonitor");
+        }
+    }
+
+
+    public WimaxMonitor(WimaxStateTracker tracker)
+    {
+        m_bLog = false;
+        mEventHandler = new EventHandler(this);
+        oldState = DeviceStatusInfo.DeviceStatus.RF_OFF_HW_SW;
+        oldInfo = DeviceStatusInfo.ConnectionProgressInfo.De_registration;
+        mWimaxStateTracker = tracker;
+        WimaxNative.SetHandler(mEventHandler);
+    }
+
+    public void startMonitoring()
+    {
+        (new MonitorThread()).start();
+    }
+
+    public NetworkStateTracker getNetworkStateTracker()
+    {
+        return mWimaxStateTracker;
+    }
+
+    public DeviceStatusInfo.DeviceStatus getDeviceStatusInfo()
+    {
+        return oldState;
+    }
+
+    public void setEnableLog(boolean blog)
+    {
+        m_bLog = blog;
+    }
+
+    public void resetOldState()
+    {
+        oldState = DeviceStatusInfo.DeviceStatus.RF_OFF_HW_SW;
+        oldInfo = DeviceStatusInfo.ConnectionProgressInfo.De_registration;
+    }
+
+    private void handleWimaxStateChange(WimaxState newWimaxState, DeviceStatusInfo.ConnectionProgressInfo newInfo)
+    {
+        mWimaxStateTracker.notifyStateChange(newWimaxState, newInfo);
+    }
+
+    private void handleIpRenew()
+    {
+        mWimaxStateTracker.notifyIpRenew();
+    }
+
+    private void handleAuthFail(int nErrorCode, String strError)
+    {
+        mWimaxStateTracker.notifyAuthFail(nErrorCode, strError);
+    }
+
+    private void handleMruListMsg(List mruList)
+    {
+        mWimaxStateTracker.sendMruListBroadcast(mruList.size());
+    }
+
+    private void handleMruUpdateMsg(int nSubType, int nErrorValue)
+    {
+        mWimaxStateTracker.sendMruUpdateBroadcast(nSubType, nErrorValue);
+    }
+
+    private void handleBSListMsg(List bsList)
+    {
+        mWimaxStateTracker.sendWimaxBSListBroadcast(bsList);
+    }
+
+    private void handleDriverEvent(String state)
+    {
+        if(state == null)
+            return;
+        if(state.equals("STOPPED"))
+            mWimaxStateTracker.notifyDriverStopped();
+        else
+        if(state.equals("STARTED"))
+            mWimaxStateTracker.notifyDriverStarted();
+    }
+
+    public static void nap(int secs)
+    {
+        try
+        {
+            Thread.sleep(secs * 1000);
+        }
+        catch(InterruptedException ignore) { }
+    }
+
+    private void handleNormalStatus(DeviceStatusInfo.DeviceStatus status, DeviceStatusInfo.ConnectionProgressInfo info)
+    {
+        static class _cls1
+        {
+
+            static final int $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[];
+            static final int $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$StatusReason[];
+
+            static 
+            {
+                $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$StatusReason = new int[DeviceStatusInfo.StatusReason.values().length];
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$StatusReason[DeviceStatusInfo.StatusReason.Normal.ordinal()] = 1;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$StatusReason[DeviceStatusInfo.StatusReason.Fail.ordinal()] = 2;
+                }
+                catch(NoSuchFieldError ex) { }
+                $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus = new int[DeviceStatusInfo.DeviceStatus.values().length];
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.UnInitialized.ordinal()] = 1;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Initialized.ordinal()] = 2;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Scanning.ordinal()] = 3;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Ready.ordinal()] = 4;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Connecting.ordinal()] = 5;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Data_Connected.ordinal()] = 6;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Disconnecting.ordinal()] = 7;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.Disconnected.ordinal()] = 8;
+                }
+                catch(NoSuchFieldError ex) { }
+                try
+                {
+                    $SwitchMap$android$net$fourG$wimax$DeviceStatusInfo$DeviceStatus[DeviceStatusInfo.DeviceStatus.RF_OFF_SW.ordinal()] = 9;
+                }
+                catch(NoSuchFieldError ex) { }
+            }
+        }
+
+        switch(_cls1..SwitchMap.android.net.fourG.wimax.DeviceStatusInfo.DeviceStatus[status.ordinal()])
+        {
+        default:
+            break;
+
+        case 1: // '\001'
+            if(oldState != DeviceStatusInfo.DeviceStatus.UnInitialized)
+            {
+                handleWimaxStateChange(WimaxState.INITIALIZING, info);
+            } else
+            {
+                handleDriverEvent("STARTED");
+                handleWimaxStateChange(WimaxState.INITIALIZING, info);
+            }
+            break;
+
+        case 2: // '\002'
+            if(oldState != DeviceStatusInfo.DeviceStatus.Initialized)
+                handleWimaxStateChange(WimaxState.INITIALIZED, info);
+            break;
+
+        case 3: // '\003'
+            if(oldState == DeviceStatusInfo.DeviceStatus.Initialized)
+                handleWimaxStateChange(WimaxState.SCANNING, info);
+            break;
+
+        case 4: // '\004'
+            if(oldState == DeviceStatusInfo.DeviceStatus.Scanning)
+                handleWimaxStateChange(WimaxState.READY, info);
+            break;
+
+        case 5: // '\005'
+            handleWimaxStateChange(WimaxState.CONNECTING, info);
+            break;
+
+        case 6: // '\006'
+            if(m_bLog)
+                Log.d("WimaxMonitor", (new StringBuilder()).append("handleNormalStatus:Data_Connected  Received ").append(info).toString());
+            if(info == DeviceStatusInfo.ConnectionProgressInfo.Registered)
+            {
+                handleWimaxStateChange(WimaxState.CONNECTED, info);
+                break;
+            }
+            if(info == DeviceStatusInfo.ConnectionProgressInfo.Idle)
+            {
+                if(oldInfo != DeviceStatusInfo.ConnectionProgressInfo.Idle)
+                    handleWimaxStateChange(WimaxState.CONNECTED, info);
+                break;
+            }
+            if(info == DeviceStatusInfo.ConnectionProgressInfo.IP_Renew)
+            {
+                handleIpRenew();
+                break;
+            }
+            if(info == DeviceStatusInfo.ConnectionProgressInfo.IP_USB)
+            {
+                handleWimaxStateChange(WimaxState.CONNECTED, info);
+                break;
+            }
+            if(info == DeviceStatusInfo.ConnectionProgressInfo.Ranging)
+                mWimaxStateTracker.acquire_WakeLock();
+            break;
+
+        case 7: // '\007'
+            handleWimaxStateChange(WimaxState.DISCONNECTING, info);
+            break;
+
+        case 8: // '\b'
+            handleWimaxStateChange(WimaxState.DISCONNECTED, info);
+            break;
+
+        case 9: // '\t'
+            handleWimaxStateChange(WimaxState.DISCONNECTED, info);
+            break;
+        }
+    }
+
+    private void handleDeviceStatus(DeviceStatusInfo result)
+    {
+        if(m_bLog)
+            Log.d("WimaxMonitor", (new StringBuilder()).append("+ Received ").append(result).toString());
+        DeviceStatusInfo.DeviceStatus status = result.getDeviceStatus();
+        DeviceStatusInfo.StatusReason reason = result.getStatusReason();
+        DeviceStatusInfo.ConnectionProgressInfo info = result.getConnectionProgressInfo();
+        switch(_cls1..SwitchMap.android.net.fourG.wimax.DeviceStatusInfo.StatusReason[reason.ordinal()])
+        {
+        default:
+            break;
+
+        case 1: // '\001'
+            if(m_bLog)
+                Log.d("WimaxMonitor", (new StringBuilder()).append("testhere handleDeviceStatus + Received ").append(result).toString());
+            handleNormalStatus(status, info);
+            oldState = status;
+            oldInfo = info;
+            break;
+
+        case 2: // '\002'
+            if(status == DeviceStatusInfo.DeviceStatus.UnInitialized)
+            {
+                info = DeviceStatusInfo.ConnectionProgressInfo.DISCONNECTED_USB;
+                handleWimaxStateChange(WimaxState.INITIALIZING, info);
+                oldState = status;
+                oldInfo = info;
+                break;
+            }
+            if(status == DeviceStatusInfo.DeviceStatus.RF_OFF_HW_SW)
+                info = DeviceStatusInfo.ConnectionProgressInfo.Abnormal_State;
+            handleWimaxStateChange(WimaxState.DISCONNECTED, info);
+            oldState = status;
+            oldInfo = info;
+            break;
+        }
+    }
+
+    public boolean handleMessage(Message msg)
+    {
+        if(m_bLog)
+            Log.d("WimaxMonitor", (new StringBuilder()).append("+ Received ").append(msg).toString());
+        switch(msg.what)
+        {
+        default:
+            break;
+
+        case 0: // '\0'
+            handleDeviceStatus((DeviceStatusInfo)msg.obj);
+            break;
+
+        case 1: // '\001'
+            if(msg.arg1 == 0)
+                handleDriverEvent("STOPPED");
+            break;
+
+        case 2: // '\002'
+            if(msg.arg1 == 1)
+                oldState = DeviceStatusInfo.DeviceStatus.RF_OFF_SW;
+            break;
+
+        case 3: // '\003'
+            handleAuthFail(msg.arg1, (String)msg.obj);
+            break;
+
+        case 4: // '\004'
+            handleMruListMsg((List)msg.obj);
+            break;
+
+        case 5: // '\005'
+            handleMruUpdateMsg(msg.arg1, msg.arg2);
+            break;
+
+        case 6: // '\006'
+            mWimaxStateTracker.notifyOMADMResponse((ByteBuffer)msg.obj, msg.arg1, msg.arg2);
+            break;
+
+        case 7: // '\007'
+            mWimaxStateTracker.notifyRadioInfoResponse();
+            break;
+
+        case 8: // '\b'
+            if(msg.arg1 == 0)
+                mWimaxStateTracker.notifyLinkWeakInformation();
+            else
+                mWimaxStateTracker.notifyMoCallInformation();
+            break;
+
+        case 9: // '\t'
+            java.util.Date now = Calendar.getInstance().getTime();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyMMddHHmmss");
+            String strUTCtime = formatter.format(now);
+            if(m_bLog)
+                Log.d("UTCTIME", (new StringBuilder()).append("time : ").append(strUTCtime).toString());
+            WimaxNative.SendUTCTime(strUTCtime);
+            break;
+
+        case 10: // '\n'
+            if(m_bLog)
+                Log.d("WimaxMonitor", " [EVENT_BS_INFO_RESPONSE] ");
+            handleBSListMsg((List)msg.obj);
+            break;
+        }
+        return false;
+    }
+
+    private static final String TAG = "WimaxMonitor";
+    private boolean m_bLog;
+    private static final int CONNECTED = 1;
+    private static final int DISCONNECTED = 2;
+    private static final int STATE_CHANGE = 3;
+    private static final int LINK_SPEED = 5;
+    private static final int TERMINATING = 6;
+    private static final int DRIVER_STATE = 7;
+    private static final int UNKNOWN = 8;
+    static final int EVENT_DEVICE_STATUS = 0;
+    static final int EVENT_CARD_PRESENCE = 1;
+    static final int EVENT_POWER_STATE = 2;
+    static final int EVENT_AUTH_FAIL_MSG = 3;
+    static final int EVENT_MRU_LIST_MSG = 4;
+    static final int EVENT_MRU_UPDATE_MSG = 5;
+    static final int EVENT_OMADM_RESPONSE = 6;
+    static final int EVENT_RADIO_INFO_RESPONSE = 7;
+    static final int EVENT_LINK_WEAK_INFO = 8;
+    static final int EVENT_AUTH_UTC_TIME = 9;
+    static final int EVENT_BS_INFO_RESPONSE = 10;
+    private final WimaxStateTracker mWimaxStateTracker;
+    protected EventHandler mEventHandler;
+    private DeviceStatusInfo.DeviceStatus oldState;
+    private DeviceStatusInfo.ConnectionProgressInfo oldInfo;
+
+}

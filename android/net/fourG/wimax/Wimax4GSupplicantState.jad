@@ -1,0 +1,86 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GSupplicantState.java
+
+package android.net.fourG.wimax;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public final class Wimax4GSupplicantState extends Enum
+    implements Parcelable
+{
+
+    public static Wimax4GSupplicantState[] values()
+    {
+        return (Wimax4GSupplicantState[])$VALUES.clone();
+    }
+
+    public static Wimax4GSupplicantState valueOf(String name)
+    {
+        return (Wimax4GSupplicantState)Enum.valueOf(android.net.fourG.wimax.Wimax4GSupplicantState.class, name);
+    }
+
+    private Wimax4GSupplicantState(String s, int i)
+    {
+        super(s, i);
+    }
+
+    public static boolean isValidState(Wimax4GSupplicantState state)
+    {
+        return state != UNINITIALIZED && state != INVALID;
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(name());
+    }
+
+    public static final Wimax4GSupplicantState ASSOCIATED;
+    public static final Wimax4GSupplicantState ASSOCIATING;
+    public static final Wimax4GSupplicantState COMPLETED;
+    public static final Wimax4GSupplicantState DISCONNECTED;
+    public static final Wimax4GSupplicantState DORMANT;
+    public static final Wimax4GSupplicantState HANDSHAKE;
+    public static final Wimax4GSupplicantState INACTIVE;
+    public static final Wimax4GSupplicantState INVALID;
+    public static final Wimax4GSupplicantState SCANNING;
+    public static final Wimax4GSupplicantState UNINITIALIZED;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public Wimax4GSupplicantState createFromParcel(Parcel in)
+        {
+            return Wimax4GSupplicantState.valueOf(in.readString());
+        }
+
+        public Wimax4GSupplicantState[] newArray(int size)
+        {
+            return new Wimax4GSupplicantState[size];
+        }
+
+    };
+    private static final Wimax4GSupplicantState $VALUES[]; /* synthetic field */
+
+    static 
+    {
+        ASSOCIATED = new Wimax4GSupplicantState("ASSOCIATED", 0);
+        ASSOCIATING = new Wimax4GSupplicantState("ASSOCIATING", 1);
+        COMPLETED = new Wimax4GSupplicantState("COMPLETED", 2);
+        DISCONNECTED = new Wimax4GSupplicantState("DISCONNECTED", 3);
+        DORMANT = new Wimax4GSupplicantState("DORMANT", 4);
+        HANDSHAKE = new Wimax4GSupplicantState("HANDSHAKE", 5);
+        INACTIVE = new Wimax4GSupplicantState("INACTIVE", 6);
+        INVALID = new Wimax4GSupplicantState("INVALID", 7);
+        SCANNING = new Wimax4GSupplicantState("SCANNING", 8);
+        UNINITIALIZED = new Wimax4GSupplicantState("UNINITIALIZED", 9);
+        $VALUES = (new Wimax4GSupplicantState[] {
+            ASSOCIATED, ASSOCIATING, COMPLETED, DISCONNECTED, DORMANT, HANDSHAKE, INACTIVE, INVALID, SCANNING, UNINITIALIZED
+        });
+    }
+}

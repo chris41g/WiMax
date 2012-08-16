@@ -1,0 +1,1796 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   WimaxService.java
+
+package com.android.server;
+
+import android.content.*;
+import android.net.*;
+import android.net.fourG.wimax.*;
+import android.os.*;
+import android.provider.Settings;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+import com.android.internal.app.IBatteryStats;
+import com.android.server.am.BatteryStatsService;
+import java.io.*;
+import java.util.*;
+
+public class WimaxService extends android.net.fourG.wimax.IWimax4GManager.Stub
+{
+    private class Multicaster extends DeathRecipient
+    {
+
+        public void binderDied()
+        {
+            if(m_bLog)
+                Log.e("WimaxService", "Multicaster binderDied");
+            synchronized(mMulticasters)
+            {
+                int i = mMulticasters.indexOf(this);
+                if(i != -1)
+                    removeMulticasterLocked(i, mMode);
+            }
+        }
+
+        public String toString()
+        {
+            return (new StringBuilder()).append("Multicaster{").append(mTag).append(" binder=").append(mBinder).append("}").toString();
+        }
+
+        public int getUid()
+        {
+            return mMode;
+        }
+
+        Multicaster(String tag, IBinder binder)
+        {
+            super(Binder.getCallingUid(), tag, binder);
+        }
+    }
+
+    private abstract class DeathRecipient
+        implements android.os.IBinder.DeathRecipient
+    {
+
+        void unlinkDeathRecipient()
+        {
+            mBinder.unlinkToDeath(this, 0);
+        }
+
+        String mTag;
+        int mMode;
+        IBinder mBinder;
+
+        DeathRecipient(int mode, String tag, IBinder binder)
+        {
+            mTag = tag;
+            mMode = mode;
+            mBinder = binder;
+            try
+            {
+                mBinder.linkToDeath(this, 0);
+            }
+            catch(RemoteException e)
+            {
+                binderDied();
+            }
+        }
+    }
+
+    private class LockList
+    {
+
+        private synchronized boolean hasLocks()
+        {
+            return !mList.isEmpty();
+        }
+
+        private synchronized int getStrongestLockMode()
+        {
+            if(mList.isEmpty())
+                return 1;
+            for(Iterator i$ = mList.iterator(); i$.hasNext();)
+            {
+                Lock l = (Lock)i$.next();
+                if(l.mMode == 1)
+                    return 1;
+            }
+
+            return 2;
+        }
+
+        private void addLock(Lock lock)
+        {
+            if(findLockByBinder(lock.mBinder) < 0)
+                mList.add(lock);
+        }
+
+        private Lock removeLock(IBinder binder)
+        {
+            int index = findLockByBinder(binder);
+            if(index >= 0)
+            {
+                Lock ret = (Lock)mList.remove(index);
+                ret.unlinkDeathRecipient();
+                return ret;
+            } else
+            {
+                return null;
+            }
+        }
+
+        private int findLockByBinder(IBinder binder)
+        {
+            int size = mList.size();
+            for(int i = size - 1; i >= 0; i--)
+                if(((Lock)mList.get(i)).mBinder == binder)
+                    return i;
+
+            return -1;
+        }
+
+        private void dump(PrintWriter pw)
+        {
+            Lock l;
+            for(Iterator i$ = mList.iterator(); i$.hasNext(); pw.println(l))
+            {
+                l = (Lock)i$.next();
+                pw.print("    ");
+            }
+
+        }
+
+        private List mList;
+
+
+
+
+        private LockList()
+        {
+            mList = new ArrayList();
+        }
+
+    }
+
+    private class Lock extends DeathRecipient
+    {
+
+        public void binderDied()
+        {
+            synchronized(mLocks)
+            {
+                releaseLockLocked(mBinder);
+            }
+        }
+
+        public String toString()
+        {
+            return (new StringBuilder()).append("Lock{").append(mTag).append(" type=").append(mMode).append(" binder=").append(mBinder).append("}").toString();
+        }
+
+        Lock(int lockMode, String tag, IBinder binder)
+        {
+            super(lockMode, tag, binder);
+        }
+    }
+
+    private class WimaxHandler extends Handler
+    {
+
+        public void handleMessage(Message msg)
+        {
+            if(m_bLog)
+                Log.d("WimaxService", (new StringBuilder()).append("+ Received ").append(msg).toString());
+            switch(msg.what)
+            {
+            case 3: // '\003'
+            default:
+                break;
+
+            case 0: // '\0'
+                m_bLog = getEnableLog();
+                mWimaxStateTracker.setEnableLog(m_bLog);
+                if(m_bLog)
+                    Log.d("WimaxService", "MESSAGE_ENABLE_WIMAX >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                setWimaxEnabledBlocking(true, msg.arg1 == 1, msg.arg2);
+                break;
+
+            case 1: // '\001'
+                setWimaxEnabledBlocking(false, msg.arg1 == 1, msg.arg2);
+                release_sWakeLock();
+                break;
+
+            case 2: // '\002'
+                mWimaxStateTracker.disconnectAndStop();
+                break;
+
+            case 4: // '\004'
+                synchronized(WimaxService.sDriverStopWakeLock)
+                {
+                    if(WimaxService.sDriverStopWakeLock.isHeld())
+                    {
+                        if(m_bLog)
+                            Log.d("WimaxService", "release sDriverStopWakeLock----------------------");
+                        WimaxService.sDriverStopWakeLock.release();
+                    }
+                }
+                break;
+            }
+        }
+
+        public WimaxHandler(Looper looper)
+        {
+            super(looper);
+        }
+    }
+
+
+    WimaxService(Context context, WimaxStateTracker tracker)
+    {
+        m_bLog = false;
+        mStartTime = 0L;
+        mEndTime = 0L;
+        mDiffTime = 0;
+        mRxStart = 0L;
+        mRxEnd = 0L;
+        mDiffRxsize = 0L;
+        mThroughput = 0;
+        mAvailableList = new ArrayList();
+        mNetworkList = new ArrayList();
+        m4GConfiguration = new Wimax4GConfiguration();
+        mConnected4GBaseStationInfo = new Wimax4GBaseStationInfo();
+        mConnectionStatistics = new android.net.fourG.wimax.Wimax4GManager.WimaxConnectionStatistics();
+        mDeviceInfo = new Wimax4GDeviceInfo();
+        mLastEnableUid = Process.myUid();
+        m_nCallState = 0;
+        mContext = context;
+        mWimaxStateTracker = tracker;
+        HandlerThread WimaxThread = new HandlerThread("WimaxService");
+        WimaxThread.start();
+        mWimaxHandler = new WimaxHandler(WimaxThread.getLooper());
+        mWimax4GState = 1;
+        boolean WimaxEnabled = getPersistedWimaxEnabled();
+        mWimaxStateTracker.m_bPoweroff = false;
+        PowerManager powerManager = (PowerManager)mContext.getSystemService("power");
+        sWakeLock = powerManager.newWakeLock(1, "WimaxService");
+        sDriverStopWakeLock = powerManager.newWakeLock(1, "WimaxService");
+        mWimaxStateTracker.setReleaseWakeLockCallback(new Runnable() {
+
+            public void run()
+            {
+                mWimaxHandler.removeMessages(4);
+                synchronized(WimaxService.sDriverStopWakeLock)
+                {
+                    if(WimaxService.sDriverStopWakeLock.isHeld())
+                    {
+                        if(m_bLog)
+                            Log.i("WimaxService", "[setReleaseWakeLockCallback] sDriverStopWakeLock.release()");
+                        WimaxService.sDriverStopWakeLock.release();
+                    }
+                }
+            }
+
+        });
+        if(m_bLog)
+            Log.i("WimaxService", (new StringBuilder()).append("WimaxService starting up with Wimax").append(WimaxEnabled ? "enabled" : "disabled").toString());
+        mWimaxStateTracker.isBootCompleted(false);
+        mWimaxStateTracker.setWakeLock(sWakeLock);
+        mContext.registerReceiver(new BroadcastReceiver() {
+
+            public void onReceive(Context context, Intent intent)
+            {
+                mAirplaneModeOverwridden = false;
+                updateWimaxStatus();
+            }
+
+        }, new IntentFilter("android.intent.action.AIRPLANE_MODE"));
+        IntentFilter filter = new IntentFilter("android.intent.action.PACKAGE_ADDED");
+        filter.addAction("android.intent.action.PACKAGE_REMOVED");
+        filter.addAction("android.intent.action.PACKAGE_CHANGED");
+        filter.addDataScheme("package");
+        mContext.registerReceiver(new BroadcastReceiver() {
+
+            public void onReceive(Context context, Intent intent)
+            {
+                String action = intent.getAction();
+                Uri data = intent.getData();
+                String pkgName = data.getEncodedSchemeSpecificPart();
+                if(m_bLog)
+                    Log.i("WimaxService", (new StringBuilder()).append(action).append(" ").append(pkgName).toString());
+                if(!"com.samsung.wimax.widget4G".equals(pkgName))
+                    return;
+                if(!"android.intent.action.PACKAGE_ADDED".equals(action))
+                    if(!"android.intent.action.PACKAGE_REMOVED".equals(action));
+            }
+
+        }, filter);
+        mContext.registerReceiver(new BroadcastReceiver() {
+
+            public void onReceive(Context context, Intent intent)
+            {
+                if(m_bLog)
+                    Log.i("WimaxService", "Intent.ACTION_BOOT_COMPLETED");
+                boolean WimaxEnabled = getPersistedWimaxEnabled();
+                mWimaxStateTracker.isBootCompleted(true);
+                setWimaxEnabledBlocking(WimaxEnabled, false, Process.myUid());
+            }
+
+        }, new IntentFilter("android.intent.action.BOOT_COMPLETED"));
+        m_bLog = getEnableLog();
+        telMgr = (TelephonyManager)mContext.getSystemService("phone");
+        PhoneStateListener listener = new PhoneStateListener() {
+
+            public void onCallStateChanged(int state, String incomingNumber)
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", (new StringBuilder()).append("onCallStateChanged : ").append(state).toString());
+                m_nCallState = state;
+                int nWimaxMode = getWimaxMode();
+                if(nWimaxMode == 2 || nWimaxMode == 4)
+                {
+                    WimaxState wimaxState = getWimaxState();
+                    int wimax4GState = get4GState();
+                    if(state == 2)
+                    {
+                        mWimaxStateTracker.SetNoBackOff(true);
+                        if(wimaxState == WimaxState.CONNECTING || wimaxState == WimaxState.OBTAINING_IPADDR || wimaxState == WimaxState.CONNECTED)
+                        {
+                            if(m_bLog)
+                                Log.d("WimaxService", "CALL_STATE_OFFHOOK, disconnect");
+                            disconnect();
+                        }
+                    } else
+                    if(state == 0)
+                    {
+                        boolean bNoBackOff = mWimaxStateTracker.getNoBackoff();
+                        mWimaxStateTracker.SetNoBackOff(false);
+                        if(wimaxState == WimaxState.DISCONNECTED && wimax4GState == 3 && bNoBackOff)
+                        {
+                            if(m_bLog)
+                                Log.d("WimaxService", "CALL_STATE_IDLE, reconnect");
+                            startScan(false);
+                        }
+                    }
+                }
+            }
+
+        };
+        telMgr.listen(listener, 32);
+    }
+
+    public boolean getPersistedWimaxEnabled()
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        try
+        {
+            return android.provider.Settings.Secure.getInt(cr, "wimax_on") == 1;
+        }
+        catch(android.provider.Settings.SettingNotFoundException e)
+        {
+            android.provider.Settings.Secure.putInt(cr, "wimax_on", 0);
+        }
+        return false;
+    }
+
+    private void persistWimaxEnabled(boolean enabled)
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        android.provider.Settings.Secure.putInt(cr, "wimax_on", enabled ? 1 : 0);
+    }
+
+    private boolean getPersistedNetworkConnectionEnabled()
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        try
+        {
+            return android.provider.Settings.Secure.getInt(cr, "wimax_network_connection") == 1;
+        }
+        catch(android.provider.Settings.SettingNotFoundException e)
+        {
+            android.provider.Settings.Secure.putInt(cr, "wimax_network_connection", 1);
+        }
+        return true;
+    }
+
+    private void persistNetworkConnectionEnabled(boolean enabled)
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        android.provider.Settings.Secure.putInt(cr, "wimax_network_connection", enabled ? 1 : 0);
+    }
+
+    NetworkStateTracker getNetworkStateTracker()
+    {
+        return mWimaxStateTracker;
+    }
+
+    public int getNetworkConnectionSetting()
+    {
+        return mModeWhieAPsleep;
+    }
+
+    public boolean set4GEnabled(boolean enable)
+    {
+        enforceChangePermission();
+        enforceRadioDisablePermission();
+        if(mWimaxHandler == null)
+            return false;
+        synchronized(mWimaxHandler)
+        {
+            long ident = Binder.clearCallingIdentity();
+            if(m_bLog)
+                Log.d("WimaxService", "acquire sWakeLock----------------------");
+            acquire_WakeLock(sWakeLock);
+            Binder.restoreCallingIdentity(ident);
+            mLastEnableUid = Binder.getCallingUid();
+            mAirplaneModeOverwridden = enable && isAirplaneModeOn() && isAirplaneToggleable();
+            if(enable && isAirplaneModeOn() && !mAirplaneModeOverwridden)
+            {
+                if(m_bLog)
+                    Log.e("WimaxService", "[set4GEnabled] can't enable 4G because isAirplaneModeOn() is true");
+                return false;
+            }
+            sendEnableMessage(enable, true, Binder.getCallingUid());
+        }
+        return true;
+    }
+
+    private boolean setWimaxEnabledBlocking(boolean enable, boolean persist, int uid)
+    {
+        int nWimaxEnabledState = get4GState();
+        if(!enable && (nWimaxEnabledState == 1 || nWimaxEnabledState == 0))
+        {
+            if(m_bLog)
+                Log.w("WimaxService", "[setWimaxEnabledBlocking] already disabled");
+            return true;
+        }
+        mAirplaneModeOverwridden = enable && isAirplaneModeOn() && isAirplaneToggleable();
+        if(enable && isAirplaneModeOn() && !mAirplaneModeOverwridden)
+        {
+            if(m_bLog)
+                Log.e("WimaxService", "[set4GEnabled] can't enable 4G because isAirplaneModeOn() is true");
+            return false;
+        }
+        if(!mWimaxStateTracker.mModemReset && enable && (nWimaxEnabledState == 3 || nWimaxEnabledState == 2))
+        {
+            if(m_bLog)
+                Log.w("WimaxService", "[setWimaxEnabledBlocking] already enabled");
+            return true;
+        }
+        int nWorkModeState = getWorkModeState();
+        if(m_bLog)
+            Log.i("WimaxService", (new StringBuilder()).append("[setWimaxEnabledBlocking] Workmode = ").append(nWorkModeState).toString());
+        setWimaxEnabledState(enable ? 2 : 0, uid);
+        synchronized(mWimaxHandler)
+        {
+            if(m_bLog)
+                Log.e("WimaxService", "synchronized wimax..");
+            if(enable)
+            {
+                if(m_bLog)
+                    Log.i("WimaxService", (new StringBuilder()).append("wimax ON ---mModeWhieAPsleep = ").append(mModeWhieAPsleep).append(" mModemReset = ").append(mWimaxStateTracker.mModemReset).append(" mIsDMmode = ").append(mIsDMmode).append(" mbUSBTethered = ").append(mbUSBTethered).append(" m_nPluggedType : ").append(m_nPluggedType).toString());
+                if(getPersistedNetworkConnectionEnabled())
+                    mModeWhieAPsleep = 1;
+                else
+                    mModeWhieAPsleep = 0;
+                if(!mWimaxStateTracker.mModemReset)
+                {
+                    registerForBroadcasts();
+                    mWimaxStateTracker.startEventLoop();
+                } else
+                {
+                    mWimaxStateTracker.mModemReset = false;
+                }
+                WimaxNative.setVirtualIdleWhileAPsleep(mModeWhieAPsleep);
+                if(mbUSBTethered && m_nPluggedType == 2)
+                    setWimaxMode(1, true);
+                else
+                    setWimaxMode(1, false);
+                if(mIsDMmode)
+                    WimaxNative.setWimaxTethered((byte)4);
+                else
+                    WimaxNative.setWimaxTethered((byte)0);
+                mWimaxStateTracker.m_bPoweroff = false;
+                if(!WimaxNative.startWimax())
+                {
+                    WimaxNative.loadDriver((byte)0);
+                    if(m_bLog)
+                        Log.e("WimaxService", (new StringBuilder()).append("Failed to start Wimax. m_bPoweroff = ").append(mWimaxStateTracker.m_bPoweroff).toString());
+                    mContext.unregisterReceiver(mReceiver);
+                    if(mWimaxStateTracker.m_bPoweroff)
+                    {
+                        if(m_bLog)
+                            Log.e("WimaxService", (new StringBuilder()).append("mWimax4GState = ").append(mWimax4GState).toString());
+                        setWimaxEnabledState(1, uid);
+                    } else
+                    {
+                        setWimaxEnabledState(4, uid);
+                    }
+                    release_sWakeLock();
+                    return false;
+                }
+                int nWimaxMode = getWimaxMode();
+                if((nWimaxMode == 4 || nWimaxMode == 2) && m_nCallState == 2)
+                    mWimaxStateTracker.SetNoBackOff(true);
+            } else
+            {
+                mWimaxStateTracker.m_bPoweroff = true;
+                mWimaxStateTracker.nRetryFlag = 0;
+                mWimaxStateTracker.resetOldState();
+                if(4 != nWimaxEnabledState)
+                    try
+                    {
+                        mContext.unregisterReceiver(mReceiver);
+                    }
+                    catch(IllegalArgumentException e) { }
+                WimaxState wimaxState = mWimaxStateTracker.getCurrentWimaxState();
+                if(wimaxState == WimaxState.CONNECTED || wimaxState == WimaxState.CONNECTING || wimaxState == WimaxState.OBTAINING_IPADDR)
+                {
+                    if(m_bLog)
+                        Log.i("WimaxService", (new StringBuilder()).append("state(").append(wimaxState).append(") :  DisconnectWimax before turn off").toString());
+                    mWimaxStateTracker.resetInterface();
+                    mWimaxStateTracker.mIsTetheredmode = mIsTetheredmode;
+                    mWimaxStateTracker.disconnectAndStop();
+                } else
+                {
+                    if(m_bLog)
+                        Log.i("WimaxService", (new StringBuilder()).append("state(").append(wimaxState).append(") : stopWimax").toString());
+                    mWimaxStateTracker.mIsTetheredmode = mIsTetheredmode;
+                    if(!WimaxNative.stopWimax() && m_bLog)
+                        Log.e("WimaxService", "fail to stop wimax..");
+                    if(WimaxNative.loadDriver((byte)0))
+                        mWimaxStateTracker.notifyDriverStopped();
+                }
+            }
+            if(persist)
+            {
+                if(m_bLog)
+                    Log.i("WimaxService", (new StringBuilder()).append("[setWimaxEnabledBlocking] persist = ").append(persist).toString());
+                persistWimaxEnabled(enable);
+            }
+        }
+        return true;
+    }
+
+    private void setWimaxEnabledState(int Wimax4GState, int uid)
+    {
+        int previousWimaxStatus = mWimax4GState;
+        if(m_bLog)
+            Log.d("WimaxService", "[setWimaxEnabledState] ");
+        long ident = Binder.clearCallingIdentity();
+        mWimax4GState = Wimax4GState;
+        Intent intent = new Intent("android.net.fourG.NET_4G_STATE_CHANGED");
+        intent.addFlags(0x10000000);
+        intent.putExtra("4g_state", Wimax4GState);
+        intent.putExtra("4G_previous_state", previousWimaxStatus);
+        mContext.sendStickyBroadcast(intent);
+    }
+
+    private void enforceAccessPermission()
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.ACCESS_4G_STATE", "WimaxService");
+    }
+
+    private void enforceChangePermission()
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.CHANGE_4G_STATE", "WimaxService");
+    }
+
+    private void enforceRadioDisablePermission()
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.ACCESS_4G_RADIO_DISABLE", "WimaxService");
+    }
+
+    private void enforceMulticastChangePermission()
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.CHANGE_WIMAX_MULTICAST_STATE", "WimaxService");
+    }
+
+    public int get4GState()
+    {
+        enforceAccessPermission();
+        return mWimax4GState;
+    }
+
+    public void setWimaxStatus(int wimaxStatus)
+    {
+        enforceChangePermission();
+        setWimaxEnabledState(wimaxStatus, Process.myUid());
+    }
+
+    public WimaxState getWimaxState()
+    {
+        enforceAccessPermission();
+        return mWimaxStateTracker.getCurrentWimaxState();
+    }
+
+    public int getWimaxStateDetail()
+    {
+        enforceAccessPermission();
+        return mWimaxStateTracker.getCurrentWimaxStateDetail();
+    }
+
+    private void acquire_WakeLock(android.os.PowerManager.WakeLock wl)
+    {
+        enforceAccessPermission();
+        if(wl.isHeld())
+        {
+            if(m_bLog)
+                Log.d("WimaxService", "------WakeLock already acquired----------------");
+        } else
+        {
+            if(m_bLog)
+                Log.i("WimaxService", "------WakeLock will be acquired----------------");
+            wl.acquire();
+        }
+    }
+
+    public void release_sWakeLock()
+    {
+        enforceAccessPermission();
+        if(sWakeLock.isHeld())
+        {
+            if(m_bLog)
+                Log.i("WimaxService", "------release WakeLock----------------");
+            sWakeLock.release();
+        }
+    }
+
+    public int getWimaxMode()
+    {
+        enforceAccessPermission();
+        int nMode = 0;
+        if(mIsTetheredmode)
+            nMode = 1;
+        else
+        if(mIsDMmode)
+        {
+            if(mIsBackhaulMode)
+                nMode = 4;
+            else
+                nMode = 3;
+        } else
+        if(mIsBackhaulMode)
+            nMode = 2;
+        else
+            nMode = 0;
+        return nMode;
+    }
+
+    public int setWimaxMode(int nMode, boolean enable)
+    {
+        enforceChangePermission();
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("setWimaxMode nMode: ").append(nMode).append(" enable: ").append(enable).toString());
+        int nRet = -1;
+        switch(nMode)
+        {
+        default:
+            break;
+
+        case 0: // '\0'
+            if(mWimaxStateTracker.getNoBackoff())
+                mWimaxStateTracker.SetNoBackOff(false);
+            break;
+
+        case 1: // '\001'
+            mIsTetheredmode = enable;
+            nRet = 0;
+            WimaxNative.setBackhaulMode(enable);
+            break;
+
+        case 2: // '\002'
+            mIsBackhaulMode = enable;
+            WimaxNative.setBackhaulMode(enable);
+            break;
+
+        case 3: // '\003'
+        case 4: // '\004'
+            if(get4GState() != 3)
+            {
+                mIsDMmode = enable;
+                nRet = 0;
+            }
+            break;
+        }
+        return nRet;
+    }
+
+    public boolean checkUSBstate()
+    {
+        String msg = null;
+        BufferedReader br = null;
+        FileInputStream fis = null;
+        try
+        {
+            fis = new FileInputStream("/sys/class/sec/switch/usb_state");
+        }
+        catch(FileNotFoundException fnfe)
+        {
+            return false;
+        }
+        try
+        {
+            br = new BufferedReader(new InputStreamReader(fis));
+            msg = br.readLine();
+        }
+        catch(IOException e)
+        {
+            if(m_bLog)
+                Log.e("WimaxService", (new StringBuilder()).append("File error : ").append(e).toString());
+            boolean flag = false;
+            return flag;
+        }
+        finally
+        {
+            try
+            {
+                br.close();
+                fis.close();
+            }
+            catch(IOException ioe)
+            {
+                if(m_bLog)
+                    Log.e("WimaxService", "file close error");
+                ioe.printStackTrace();
+                return false;
+            }
+        }
+        if(msg.equals("USB_STATE_CONFIGURED"))
+            return m_nPluggedType == 2;
+        else
+            return false;
+    }
+
+    public List getAvailableNetworks()
+    {
+        mAvailableList.clear();
+        WimaxNative.setAvailableList(mAvailableList);
+        WimaxNative.getAvailableNetworks(m4GConfiguration);
+        return mAvailableList;
+    }
+
+    public Wimax4GBaseStationInfo getConnectedNSP()
+    {
+        WimaxNative.getConnectedNSP(mConnected4GBaseStationInfo);
+        return mConnected4GBaseStationInfo;
+    }
+
+    public android.net.fourG.wimax.Wimax4GManager.WimaxConnectionStatistics createConnectionStatistics()
+    {
+        mConnectionStatistics.getTotalRxBytes();
+        mConnectionStatistics.getTotalRxPackets();
+        mConnectionStatistics.getTotalTxBytes();
+        mConnectionStatistics.getTotalTxPackets();
+        return mConnectionStatistics;
+    }
+
+    public Wimax4GDeviceInfo getDeviceInformation()
+    {
+        WimaxNative.getDeviceInformation(mDeviceInfo);
+        return mDeviceInfo;
+    }
+
+    public Wimax4GInfo getConnectionInfo()
+    {
+        enforceAccessPermission();
+        return mWimaxStateTracker.requestConnectionInfo();
+    }
+
+    public int[] getNetworkEntryCompleteTimes()
+    {
+        enforceAccessPermission();
+        return WimaxNative.getNetworkEntryCompleteTimes();
+    }
+
+    public int connect(String homeNspName, String roamingNspName, String userName, String passWord)
+    {
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[connect] homeNspName: ").append(homeNspName).toString());
+        int result = WimaxNative.connectmWimax(homeNspName, "", "", 0, "");
+        if(result == 0)
+        {
+            if(m_bLog)
+                Log.d("WimaxService", "^^^^^ Connection req. is success ^^^^^");
+            result = 0;
+        } else
+        {
+            if(m_bLog)
+                Log.e("WimaxService", "connectmWimax() returns fail.");
+            result = -1;
+            return result;
+        }
+        mWimaxStateTracker.setHaveLinkInfo(true);
+        mWimaxStateTracker.setIdleState(false);
+        return result;
+    }
+
+    public boolean disconnect()
+    {
+        mWimaxStateTracker.resetInterface();
+        return WimaxNative.disconnectWimax();
+    }
+
+    public boolean reassociate()
+    {
+        mWimaxStateTracker.resetInterface();
+        if(WimaxNative.disconnectWimax())
+            return set4GEnabled(true);
+        else
+            return false;
+    }
+
+    public boolean startScan(boolean bUserReq)
+    {
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[startScan] bUserReq : ").append(bUserReq).append(" nScanAttempt = ").append(mWimaxStateTracker.nScanAttempt).toString());
+        acquire_WakeLock(sWakeLock);
+        mWimaxStateTracker.notifyStateChange(WimaxState.SCANNING, null);
+        if(WimaxNative.scanCommand())
+        {
+            if(bUserReq)
+                mWimaxStateTracker.clearRetryFlag();
+            mWimaxStateTracker.nScanAttempt++;
+            return true;
+        } else
+        {
+            mWimaxStateTracker.notifyStateChange(WimaxState.DISCONNECTED, android.net.fourG.wimax.DeviceStatusInfo.ConnectionProgressInfo.Syncup_PHY);
+            release_sWakeLock();
+            return false;
+        }
+    }
+
+    public boolean CheckWimaxState()
+    {
+        enforceAccessPermission();
+        return WimaxNative.getLinkState();
+    }
+
+    public void enableLogLevel(int nLoglevel)
+    {
+        char Loglevel;
+        switch(nLoglevel)
+        {
+        case 1: // '\001'
+            Loglevel = '\001';
+            break;
+
+        case 2: // '\002'
+            Loglevel = '\002';
+            break;
+
+        case 3: // '\003'
+            Loglevel = '\003';
+            break;
+
+        case 4: // '\004'
+            Loglevel = '\004';
+            break;
+
+        default:
+            Loglevel = '\001';
+            break;
+        }
+        WimaxNative.setEnableLogLevel(Loglevel);
+    }
+
+    public DhcpInfo getDhcpInfo()
+    {
+        enforceAccessPermission();
+        return mWimaxStateTracker.getDhcpInfo();
+    }
+
+    public void getNeighborList()
+    {
+        WimaxNative.getNeighborList();
+    }
+
+    public void getRadioInfoTemperature()
+    {
+        WimaxNative.getRadioInfo();
+    }
+
+    public android.net.fourG.wimax.Wimax4GManager.WimaxRadioInfoTemperature getRadioInfoTemperatureResponse()
+    {
+        return WimaxNative.radioInfo;
+    }
+
+    public int getWorkModeState()
+    {
+        String selectedMode = null;
+        int mode = 0;
+        return mode;
+    }
+
+    public boolean setWorkModeState(int workMode)
+    {
+        return true;
+    }
+
+    public void getMruList()
+    {
+        WimaxNative.mMruListRsp.clear();
+        WimaxNative.getMruList();
+    }
+
+    public List getMruListRsp()
+    {
+        return WimaxNative.mMruListRsp;
+    }
+
+    public boolean getMruUpdate(String strUpdate, int nSize)
+    {
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("getMruUpdate nSize: ").append(nSize).toString());
+        if(nSize == 0)
+            return WimaxNative.getMruUpdate(null, null, null, nSize);
+        StringTokenizer st = new StringTokenizer(strUpdate, "@");
+        int arCF[] = new int[nSize];
+        byte arBW[] = new byte[nSize];
+        byte arFFT[] = new byte[nSize];
+        for(int i = 0; i < nSize; i++)
+        {
+            if(!st.hasMoreTokens())
+                continue;
+            String temp = st.nextToken();
+            if(temp == null)
+                continue;
+            StringTokenizer stList = new StringTokenizer(temp, "#");
+            if(!stList.hasMoreTokens())
+                continue;
+            arCF[i] = Integer.parseInt(stList.nextToken());
+            if(!stList.hasMoreTokens())
+                continue;
+            arBW[i] = Byte.parseByte(stList.nextToken());
+            if(stList.hasMoreTokens())
+                arFFT[i] = Byte.parseByte(stList.nextToken());
+        }
+
+        return WimaxNative.getMruUpdate(arCF, arBW, arFFT, nSize);
+    }
+
+    public void setMruWorking(boolean bWorking)
+    {
+        mWimaxStateTracker.m_bMruWorking = bWorking;
+    }
+
+    public int makeOdbTlvData(byte pBuffer[], int nBufferIndex, int wBufferLen, int wTag, int wLength, byte pbValue[])
+    {
+        enforceAccessPermission();
+        byte highByte = (byte)(wTag >> 0 & 0xff);
+        byte lowByte = (byte)(wTag >> 8 & 0xff);
+        pBuffer[nBufferIndex + 0] = highByte;
+        pBuffer[nBufferIndex + 1] = lowByte;
+        highByte = (byte)(wLength >> 0 & 0xff);
+        lowByte = (byte)(wLength >> 8 & 0xff);
+        pBuffer[nBufferIndex + 2] = highByte;
+        pBuffer[nBufferIndex + 3] = lowByte;
+        java.lang.System.arraycopy(pbValue, 0, pBuffer, nBufferIndex + 4, wLength);
+        return (short)(4 + wLength);
+    }
+
+    public int OdbReadReq(byte tlvDataArray[])
+    {
+        enforceChangePermission();
+        return WimaxNative.OdbReadReq(tlvDataArray);
+    }
+
+    public int OdbWriteReq(byte tlvDataArray[])
+    {
+        enforceChangePermission();
+        return WimaxNative.OdbWriteReq(tlvDataArray);
+    }
+
+    public int OdbUpdateReq()
+    {
+        enforceChangePermission();
+        return WimaxNative.OdbUpdateReq();
+    }
+
+    public int OdbAddReq(byte tlvDataArray[])
+    {
+        enforceChangePermission();
+        return WimaxNative.OdbAddReq(tlvDataArray);
+    }
+
+    public int OdbDeleteReq(byte tlvDataArray[])
+    {
+        enforceChangePermission();
+        return WimaxNative.OdbDeleteReq(tlvDataArray);
+    }
+
+    public boolean setFactoryDefault(int nType)
+    {
+        enforceChangePermission();
+        if(nType == 1)
+            return WimaxNative.OdbDefaultReq();
+        else
+            return false;
+    }
+
+    public int setVirtualIdleWhileAPsleep(byte bMode)
+    {
+        boolean enable;
+        if(bMode == 1)
+            enable = true;
+        else
+            enable = false;
+        persistNetworkConnectionEnabled(enable);
+        mModeWhieAPsleep = bMode;
+        return 0;
+    }
+
+    private void sendEnableMessage(boolean enable, boolean persist, int uid)
+    {
+        Message msg = Message.obtain(mWimaxHandler, enable ? 0 : 1, persist ? 1 : 0, uid);
+        msg.sendToTarget();
+    }
+
+    private void updateWimaxStatus()
+    {
+        boolean WimaxEnabled = getPersistedWimaxEnabled();
+        boolean airplaneMode = isAirplaneModeOn() && !mAirplaneModeOverwridden;
+        boolean WimaxShouldBeEnabled = WimaxEnabled && !airplaneMode;
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[updateWimaxStatus] airplaneMode1 ").append(airplaneMode).toString());
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[updateWimaxStatus] mAirplaneModeOverwridden ").append(mAirplaneModeOverwridden).toString());
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[updateWimaxStatus] WimaxShouldBeEnabled ").append(WimaxShouldBeEnabled).toString());
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("[updateWimaxStatus] WimaxEnabled ").append(WimaxEnabled).toString());
+        synchronized(mWimaxHandler)
+        {
+            if(mWimax4GState == 2 && !airplaneMode)
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "[updateWimaxStatus] mWimax4GState == NET_4G_STATE_ENABLING && !airplaneMode return ;");
+                return;
+            }
+            if(WimaxShouldBeEnabled)
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "[updateWimaxStatus] WimaxShouldBeEnabled == true");
+                acquire_WakeLock(sWakeLock);
+                sendEnableMessage(true, false, mLastEnableUid);
+            } else
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "[updateWiMAXState] WimaxShouldBeEnabled == false acquire sWakeLock");
+                acquire_WakeLock(sWakeLock);
+                sendEnableMessage(false, false, mLastEnableUid);
+            }
+        }
+    }
+
+    private void registerForBroadcasts()
+    {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.intent.action.SCREEN_ON");
+        intentFilter.addAction("android.intent.action.SCREEN_OFF");
+        intentFilter.addAction("android.intent.action.BATTERY_CHANGED");
+        intentFilter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
+        intentFilter.addAction("com.android.settings.TETHERING_WIMAX_REALM_CHANGE_ACTION");
+        intentFilter.addAction("android.intent.action.ACTION_SHUTDOWN");
+        WimaxStateTracker _tmp = mWimaxStateTracker;
+        intentFilter.addAction("com.android.server.Wimax4GManager.action.WIMAX_DHCP_RENEW");
+        mContext.registerReceiver(mReceiver, intentFilter);
+    }
+
+    private boolean isAirplaneSensitive()
+    {
+        String airplaneModeRadios = android.provider.Settings.System.getString(mContext.getContentResolver(), "airplane_mode_radios");
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("isAirplaneSensitive return true  ").append(airplaneModeRadios).toString());
+        return airplaneModeRadios == null || airplaneModeRadios.contains("wimax");
+    }
+
+    private boolean isAirplaneToggleable()
+    {
+        String toggleableRadios = android.provider.Settings.System.getString(mContext.getContentResolver(), "airplane_mode_toggleable_radios");
+        return toggleableRadios != null && toggleableRadios.contains("wimax");
+    }
+
+    private boolean isAirplaneModeOn()
+    {
+        return isAirplaneSensitive() && android.provider.Settings.System.getInt(mContext.getContentResolver(), "airplane_mode_on", 0) == 1;
+    }
+
+    protected void dump(FileDescriptor fd, PrintWriter pw, String args[])
+    {
+        if(mContext.checkCallingOrSelfPermission("android.permission.DUMP") != 0)
+        {
+            pw.println((new StringBuilder()).append("Permission Denial: can't dump WimaxService from from pid=").append(Binder.getCallingPid()).append(", uid=").append(Binder.getCallingUid()).toString());
+            return;
+        } else
+        {
+            pw.println((new StringBuilder()).append("Wimax is ").append(stateName(mWimax4GState)).toString());
+            pw.println((new StringBuilder()).append("Stay-awake conditions: ").append(android.provider.Settings.System.getInt(mContext.getContentResolver(), "stay_on_while_plugged_in", 0)).toString());
+            pw.println();
+            pw.println("Internal state:");
+            pw.println(mWimaxStateTracker);
+            pw.println();
+            pw.println((new StringBuilder()).append("Locks acquired: ").append(mFullLocksAcquired).append(" full").toString());
+            pw.println((new StringBuilder()).append("Locks released: ").append(mFullLocksReleased).append(" full").toString());
+            pw.println();
+            pw.println("Locks held:");
+            mLocks.dump(pw);
+            return;
+        }
+    }
+
+    private static String stateName(int net4GState)
+    {
+        switch(net4GState)
+        {
+        case 0: // '\0'
+            return "disabling";
+
+        case 1: // '\001'
+            return "disabled";
+
+        case 2: // '\002'
+            return "enabling";
+
+        case 3: // '\003'
+            return "enabled";
+
+        case 4: // '\004'
+            return "unknown 4G state";
+        }
+        return "[invalid state]";
+    }
+
+    public boolean acquireLock(IBinder binder, int lockMode, String tag)
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.WAKE_LOCK", null);
+        if(lockMode != 1 && lockMode != 2)
+            return false;
+        Lock Lock = new Lock(lockMode, tag, binder);
+        synchronized(mLocks)
+        {
+            return acquireLockLocked(Lock);
+        }
+    }
+
+    private boolean acquireLockLocked(Lock Lock)
+    {
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("acquireLockLocked: ").append(Lock).toString());
+        mLocks.addLock(Lock);
+        int uid = Binder.getCallingUid();
+        long ident = Binder.clearCallingIdentity();
+        switch(Lock.mMode)
+        {
+        case 1: // '\001'
+            mFullLocksAcquired++;
+            break;
+        }
+        updateWimaxStatus();
+        return true;
+    }
+
+    public boolean releaseLock(IBinder lock)
+    {
+        mContext.enforceCallingOrSelfPermission("android.permission.WAKE_LOCK", null);
+        synchronized(mLocks)
+        {
+            return releaseLockLocked(lock);
+        }
+    }
+
+    private boolean releaseLockLocked(IBinder lock)
+    {
+        Lock wimaxLock = mLocks.removeLock(lock);
+        if(m_bLog)
+            Log.d("WimaxService", (new StringBuilder()).append("releaseLockLocked: ").append(wimaxLock).toString());
+        boolean hadLock = wimaxLock != null;
+        if(hadLock)
+        {
+            int uid = Binder.getCallingUid();
+            long ident = Binder.clearCallingIdentity();
+            switch(wimaxLock.mMode)
+            {
+            case 1: // '\001'
+                mFullLocksReleased++;
+                break;
+            }
+        }
+        updateWimaxStatus();
+        return hadLock;
+    }
+
+    public void acquireMulticastLock(IBinder binder, String tag)
+    {
+        enforceMulticastChangePermission();
+        synchronized(mMulticasters)
+        {
+            mMulticastEnabled++;
+            mMulticasters.add(new Multicaster(tag, binder));
+            synchronized(mWimaxStateTracker) { }
+        }
+        int uid = Binder.getCallingUid();
+        Long ident = Long.valueOf(Binder.clearCallingIdentity());
+        try
+        {
+            mBatteryStats.noteWifiMulticastEnabled(uid);
+        }
+        catch(RemoteException e) { }
+        finally
+        {
+            Binder.restoreCallingIdentity(ident.longValue());
+        }
+    }
+
+    public void releaseMulticastLock()
+    {
+        enforceMulticastChangePermission();
+        int uid = Binder.getCallingUid();
+        synchronized(mMulticasters)
+        {
+            mMulticastDisabled++;
+            int size = mMulticasters.size();
+            for(int i = size - 1; i >= 0; i--)
+            {
+                Multicaster m = (Multicaster)mMulticasters.get(i);
+                if(m != null && m.getUid() == uid)
+                    removeMulticasterLocked(i, uid);
+            }
+
+        }
+    }
+
+    private void removeMulticasterLocked(int i, int uid)
+    {
+        Multicaster removed = (Multicaster)mMulticasters.remove(i);
+        if(removed != null)
+            removed.unlinkDeathRecipient();
+        Long ident = Long.valueOf(Binder.clearCallingIdentity());
+    }
+
+    public boolean isMulticastEnabled()
+    {
+        enforceAccessPermission();
+        synchronized(mMulticasters)
+        {
+            return mMulticasters.size() > 0;
+        }
+    }
+
+    private boolean getEnableLog()
+    {
+        String msg = null;
+        BufferedReader br = null;
+        FileInputStream fis = null;
+        try
+        {
+            fis = new FileInputStream("/data/4G.txt");
+        }
+        catch(FileNotFoundException fnfe)
+        {
+            return false;
+        }
+        try
+        {
+            br = new BufferedReader(new InputStreamReader(fis));
+            msg = br.readLine();
+        }
+        catch(IOException e)
+        {
+            if(m_bLog)
+                Log.e("WimaxService", (new StringBuilder()).append("File error : ").append(e).toString());
+            boolean flag = false;
+            return flag;
+        }
+        finally
+        {
+            try
+            {
+                br.close();
+                fis.close();
+            }
+            catch(IOException ioe)
+            {
+                if(m_bLog)
+                    Log.e("WimaxService", "file close error");
+                ioe.printStackTrace();
+                return false;
+            }
+        }
+        for(int i = 0; i < msg.length(); i++)
+            if(msg.substring(i, i + 1).equals("F"))
+                return true;
+
+        return false;
+    }
+
+    public int saveStaticIP(String ip, String gateway, String netmask, String dns1, String dns2)
+    {
+        FileWriter fOut = null;
+        try
+        {
+            fOut = new FileWriter("/data/wimax_ip.txt");
+        }
+        catch(IOException e)
+        {
+            Log.e("WimaxService", (new StringBuilder()).append("File wimax_ip.txt not created ").append(e).toString());
+            return -1;
+        }
+        try
+        {
+            BufferedWriter osw = new BufferedWriter(fOut);
+            osw.write((new StringBuilder()).append(ip).append("\n").toString());
+            osw.write((new StringBuilder()).append(gateway).append("\n").toString());
+            osw.write((new StringBuilder()).append(netmask).append("\n").toString());
+            osw.write((new StringBuilder()).append(dns1).append("\n").toString());
+            osw.write(dns2);
+            osw.flush();
+            osw.close();
+            fOut.close();
+            return 1;
+        }
+        catch(IOException e)
+        {
+            Log.e("WimaxService", (new StringBuilder()).append("File write error").append(e).toString());
+        }
+        return -2;
+    }
+
+    public String readStaticIP(int nIndex)
+    {
+        String msg = null;
+        BufferedReader br = null;
+        FileReader fis = null;
+        try
+        {
+            fis = new FileReader("/data/wimax_ip.txt");
+        }
+        catch(FileNotFoundException fnfe)
+        {
+            Log.e("WimaxService", (new StringBuilder()).append("File Not found exception").append(fnfe).toString());
+            return "no file error";
+        }
+        try
+        {
+            br = new BufferedReader(fis);
+            do
+                msg = br.readLine();
+            while(nIndex-- > 0);
+        }
+        catch(IOException e)
+        {
+            Log.e("WimaxService", (new StringBuilder()).append("Read file error : ").append(e).toString());
+            String s = "read file error";
+            return s;
+        }
+        finally
+        {
+            try
+            {
+                br.close();
+                fis.close();
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace();
+                Log.e("WimaxService", "Close error");
+                return "close error";
+            }
+        }
+        return msg;
+    }
+
+    public int deleteStaticIP()
+    {
+        FileWriter fOut = null;
+        try
+        {
+            fOut = new FileWriter("/data/wimax_ip.txt");
+            BufferedWriter osw = new BufferedWriter(fOut);
+            osw.write("");
+            osw.flush();
+            osw.close();
+            return 1;
+        }
+        catch(IOException e)
+        {
+            Log.e("WimaxService", "File wimax_ip.txt not reset");
+        }
+        return -1;
+    }
+
+    public void calWiMAXThroughput(boolean bstart)
+    {
+        if(bstart)
+        {
+            mStartTime = (new Date()).getTime();
+            mRxStart = mConnectionStatistics.getTotalRxBytes();
+            if(m_bLog)
+                Log.d("WimaxService", (new StringBuilder()).append("Start Calculate WiMAX Throughput, StartTime is ").append(mStartTime).append(" RxSize is ").append(mRxStart).toString());
+        } else
+        {
+            mEndTime = (new Date()).getTime();
+            mRxEnd = mConnectionStatistics.getTotalRxBytes();
+            if(m_bLog)
+                Log.d("WimaxService", (new StringBuilder()).append("End Calculate WiMAX Throughput, EndTime is ").append(mEndTime).append(" RxSize is ").append(mRxEnd).toString());
+            mDiffTime = (int)(mEndTime - mStartTime);
+            mDiffRxsize = mRxEnd - mRxStart;
+            mThroughput = (int)(mDiffRxsize * 8L) / (mDiffTime / 1000);
+            if(m_bLog)
+                Log.d("WimaxService", (new StringBuilder()).append("DiffTime is ").append(mDiffTime / 1000).append("s, DiffRxsize is ").append(mDiffRxsize * 8L).append("bit, Throughput is ").append(mThroughput).append("bps").toString());
+            Intent intent = new Intent("android.net.wimax.WIMAX_DATA_THROUGHPUT");
+            intent.addFlags(0x10000000);
+            intent.putExtra("android.net.wimax.EXTRA_TIME", mDiffTime);
+            intent.putExtra("android.net.wimax.EXTRA_DATA", mDiffRxsize);
+            intent.putExtra("android.net.wimax.EXTRA_THROUGHPUT", mThroughput);
+            mContext.sendStickyBroadcast(intent);
+        }
+    }
+
+    public int getMinTemperature()
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        try
+        {
+            return android.provider.Settings.Secure.getInt(cr, "wimax_min_radio_temperature");
+        }
+        catch(android.provider.Settings.SettingNotFoundException e)
+        {
+            android.provider.Settings.Secure.putInt(cr, "wimax_min_radio_temperature", 1000);
+        }
+        return 1000;
+    }
+
+    public int getMaxTemperature()
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        try
+        {
+            return android.provider.Settings.Secure.getInt(cr, "wimax_max_radio_temperature");
+        }
+        catch(android.provider.Settings.SettingNotFoundException e)
+        {
+            android.provider.Settings.Secure.putInt(cr, "wimax_max_radio_temperature", -100);
+        }
+        return -100;
+    }
+
+    public boolean setMinTemperature(int temp)
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        android.provider.Settings.Secure.putInt(cr, "wimax_min_radio_temperature", temp);
+        return true;
+    }
+
+    public boolean setMaxTemperature(int temp)
+    {
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        android.provider.Settings.Secure.putInt(cr, "wimax_max_radio_temperature", temp);
+        return true;
+    }
+
+    public boolean reconnect()
+    {
+        return mWimaxStateTracker.reconnect();
+    }
+
+    public boolean setRoamingEnabled(boolean enabled)
+    {
+        return WimaxNative.setRoamingEnabled(enabled);
+    }
+
+    public boolean isRoamingEnabled()
+    {
+        return WimaxNative.isRoamingEnabled();
+    }
+
+    private static final String TAG = "WimaxService";
+    private boolean m_bLog;
+    private final WimaxStateTracker mWimaxStateTracker;
+    private WimaxMonitor mWimaxMonitor;
+    private Context mContext;
+    private int mWimax4GState;
+    private int m_nPluggedType;
+    private boolean mAirplaneModeOverwridden;
+    private final LockList mLocks = new LockList();
+    private int mFullLocksAcquired;
+    private int mFullLocksReleased;
+    private final List mMulticasters = new ArrayList();
+    private int mMulticastEnabled;
+    private int mMulticastDisabled;
+    private long mStartTime;
+    private long mEndTime;
+    private int mDiffTime;
+    private long mRxStart;
+    private long mRxEnd;
+    private long mDiffRxsize;
+    private int mThroughput;
+    private final IBatteryStats mBatteryStats = BatteryStatsService.getService();
+    private static final long DEFAULT_IDLE_MILLIS = 0xdbba0L;
+    private static final String WAKELOCK_TAG = "WimaxService";
+    private static final int DEFAULT_WAKELOCK_TIMEOUT = 8000;
+    private static android.os.PowerManager.WakeLock sDriverStopWakeLock;
+    private static android.os.PowerManager.WakeLock sWakeLock;
+    private static final int MESSAGE_ENABLE_WIMAX = 0;
+    private static final int MESSAGE_DISABLE_WIMAX = 1;
+    private static final int MESSAGE_STOP_WIMAX = 2;
+    private static final int MESSAGE_START_WIMAX = 3;
+    private static final int MESSAGE_RELEASE_WAKELOCK = 4;
+    private final WimaxHandler mWimaxHandler;
+    private List mAvailableList;
+    private List mNetworkList;
+    Wimax4GConfiguration m4GConfiguration;
+    Wimax4GBaseStationInfo mConnected4GBaseStationInfo;
+    android.net.fourG.wimax.Wimax4GManager.WimaxConnectionStatistics mConnectionStatistics;
+    Wimax4GDeviceInfo mDeviceInfo;
+    private static boolean mIsTetheredmode = false;
+    private static boolean mIsDMmode = false;
+    private static boolean mIsBackhaulMode = false;
+    private static boolean mbUSBTethered = false;
+    private static byte mModeWhieAPsleep = 1;
+    private static final String USB_STATE = "/sys/class/sec/switch/usb_state";
+    private static final byte USB_CONNECTED[] = {
+        85, 83, 66, 95, 83, 84, 65, 84, 69, 95, 
+        67, 79, 78, 70, 73, 71, 85, 82, 69, 68
+    };
+    private int mLastEnableUid;
+    TelephonyManager telMgr;
+    int m_nCallState;
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, Intent intent)
+        {
+            String action = intent.getAction();
+            if(action.equals("android.intent.action.SCREEN_ON"))
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "ACTION_SCREEN_ON");
+                mWimaxStateTracker.SetScreenOff(false);
+                WimaxNative.getLinkState();
+                return;
+            }
+            if(action.equals("android.intent.action.SCREEN_OFF"))
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "ACTION_SCREEN_OFF");
+                mWimaxStateTracker.SetScreenOff(true);
+                return;
+            }
+            WimaxStateTracker _tmp = mWimaxStateTracker;
+            if(action.equals("com.android.server.Wimax4GManager.action.WIMAX_DHCP_RENEW"))
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "-----------ACTION_WIMAX_DHCP_RENEW------------");
+                acquire_WakeLock(WimaxService.sWakeLock);
+                mWimaxStateTracker.notifyIpRenew();
+                return;
+            }
+            if(action.equals("android.intent.action.BATTERY_CHANGED"))
+            {
+                if(m_bLog)
+                    Log.d("WimaxService", "ACTION_BATTERY_CHANGED");
+                int nPluggedType = intent.getIntExtra("plugged", 0);
+                if(m_bLog)
+                    Log.d("WimaxService", (new StringBuilder()).append("[nPluggedType] : ").append(nPluggedType).append(" getWimaxMode() :").append(getWimaxMode()).append(" m_nPluggedType : ").append(m_nPluggedType).append(" mbUSBTethered : ").append(WimaxService.mbUSBTethered).toString());
+                if(m_nPluggedType != 2 && nPluggedType == 2)
+                {
+                    m_nPluggedType = nPluggedType;
+                    if(m_bLog)
+                        Log.d("WimaxService", "ACTION_BATTERY_CHANGED : USB CABLE IS PLUGGED");
+                    if(getWimaxMode() == 1)
+                    {
+                        if(m_bLog)
+                            Log.w("WimaxService", "discard - already tethered mode");
+                    } else
+                    if(WimaxService.mbUSBTethered && get4GState() == 3)
+                    {
+                        setWimaxMode(1, true);
+                        mWimaxStateTracker.clearRetryFlag();
+                        if(getWimaxState() == WimaxState.DISCONNECTED)
+                        {
+                            if(m_bLog)
+                                Log.i("WimaxService", "it will connect as tethered mode");
+                            startScan(true);
+                        } else
+                        if(getWimaxState() == WimaxState.SCANNING || getWimaxState() == WimaxState.READY || getWimaxState() == WimaxState.CONNECTING || getWimaxState() == WimaxState.OBTAINING_IPADDR || getWimaxState() == WimaxState.CONNECTED)
+                        {
+                            if(m_bLog)
+                                Log.i("WimaxService", "it will disconnect for re-connecting as tethered mode");
+                            disconnect();
+                        }
+                    }
+                } else
+                if(m_nPluggedType == 2 && nPluggedType != 2)
+                {
+                    m_nPluggedType = nPluggedType;
+                    if(m_bLog)
+                        Log.d("WimaxService", "ACTION_BATTERY_CHANGED : USB CABLE IS UNPLUGGED");
+                    WimaxService.mbUSBTethered = false;
+                    if(getWimaxMode() == 1)
+                    {
+                        if(get4GState() == 3)
+                        {
+                            setWimaxMode(1, false);
+                            mWimaxStateTracker.clearRetryFlag();
+                            if(getWimaxState() == WimaxState.DISCONNECTED)
+                            {
+                                if(m_bLog)
+                                    Log.i("WimaxService", "it will connect as normal mode");
+                                startScan(true);
+                            } else
+                            if(getWimaxState() == WimaxState.SCANNING || getWimaxState() == WimaxState.READY || getWimaxState() == WimaxState.CONNECTING || getWimaxState() == WimaxState.OBTAINING_IPADDR || getWimaxState() == WimaxState.CONNECTED)
+                            {
+                                if(m_bLog)
+                                    Log.i("WimaxService", "it will disconnect for re-connecting as normal mode");
+                                disconnect();
+                            }
+                        }
+                    } else
+                    if(m_bLog)
+                        Log.w("WimaxService", "discard - already NOT tethered mode");
+                }
+                return;
+            }
+            if(action.equals("android.net.wifi.WIFI_AP_STATE_CHANGED"))
+            {
+                int nApState = intent.getIntExtra("wifi_state", 14);
+                Log.d("WimaxService", (new StringBuilder()).append("WIFI_AP_STATE_CHANGED_ACTION = ").append(nApState).toString());
+                switch(nApState)
+                {
+                case 11: // '\013'
+                case 14: // '\016'
+                    if(getWimaxMode() != 2 && getWimaxMode() != 4)
+                    {
+                        if(m_bLog)
+                            Log.w("WimaxService", "discard - WIFI_AP_STATE_CHANGED_ACTION intent.");
+                        return;
+                    }
+                    break;
+
+                case 13: // '\r'
+                    if(getWimaxMode() != 1)
+                        break;
+                    if(m_bLog)
+                        Log.w("WimaxService", "discard - WIFI_AP_STATE_CHANGED_ACTION intent. current mode is wimax tethered.");
+                    return;
+
+                case 12: // '\f'
+                default:
+                    if(m_bLog)
+                        Log.w("WimaxService", "discard - WIFI_AP_STATE_CHANGED_ACTION intent.");
+                    return;
+                }
+                setWimaxMode(2, nApState == 13);
+                if(get4GState() == 3)
+                {
+                    mWimaxStateTracker.clearRetryFlag();
+                    if(getWimaxState() == WimaxState.DISCONNECTED)
+                    {
+                        if(nApState == 13)
+                        {
+                            if(m_bLog)
+                                Log.i("WimaxService", "it will be start scan to connect as backhaul mode");
+                            startScan(true);
+                        }
+                    } else
+                    {
+                        if(nApState == 13)
+                            if(m_bLog)
+                                Log.i("WimaxService", "it will be disconnect to re-connect as backhaul mode");
+                            else
+                            if(m_bLog)
+                                Log.i("WimaxService", "it will be disconnect to re-connect as normal mode");
+                        disconnect();
+                    }
+                }
+            } else
+            {
+                if(action.equals("com.android.settings.TETHERING_WIMAX_REALM_CHANGE_ACTION"))
+                {
+                    boolean usbTethered = intent.getBooleanExtra("tethering", false);
+                    if(WimaxService.mbUSBTethered == usbTethered)
+                        return;
+                    if(m_bLog)
+                        Log.i("WimaxService", "TETHERING_WIMAX_REALM_CHANGE_ACTION");
+                    WimaxService.mbUSBTethered = usbTethered;
+                    context.removeStickyBroadcast(intent);
+                    if(m_bLog)
+                        Log.d("WimaxService", (new StringBuilder()).append("usbTethered = ").append(usbTethered).toString());
+                    if(WimaxService.mbUSBTethered)
+                    {
+                        if(m_bLog)
+                            Log.d("WimaxService", "Tethering option is checked");
+                        if(getWimaxMode() == 1)
+                        {
+                            if(m_bLog)
+                                Log.w("WimaxService", "discard - already tethered mode");
+                        } else
+                        if(m_nPluggedType == 2 && get4GState() == 3)
+                        {
+                            setWimaxMode(1, true);
+                            mWimaxStateTracker.clearRetryFlag();
+                            if(getWimaxState() == WimaxState.DISCONNECTED)
+                            {
+                                if(m_bLog)
+                                    Log.i("WimaxService", "it will connect as tethered mode");
+                                startScan(true);
+                            } else
+                            if(getWimaxState() == WimaxState.SCANNING || getWimaxState() == WimaxState.READY || getWimaxState() == WimaxState.CONNECTING || getWimaxState() == WimaxState.OBTAINING_IPADDR || getWimaxState() == WimaxState.CONNECTED)
+                            {
+                                if(m_bLog)
+                                    Log.i("WimaxService", "it will disconnect for re-connecting as tethered mode");
+                                disconnect();
+                            }
+                        }
+                    } else
+                    {
+                        if(m_bLog)
+                            Log.d("WimaxService", "Tethering option is unchecked");
+                        if(getWimaxMode() == 1)
+                        {
+                            if(get4GState() == 3)
+                            {
+                                setWimaxMode(1, false);
+                                mWimaxStateTracker.clearRetryFlag();
+                                if(getWimaxState() == WimaxState.DISCONNECTED)
+                                {
+                                    if(m_bLog)
+                                        Log.i("WimaxService", "it will connect as normal mode");
+                                    startScan(true);
+                                } else
+                                if(getWimaxState() == WimaxState.SCANNING || getWimaxState() == WimaxState.READY || getWimaxState() == WimaxState.CONNECTING || getWimaxState() == WimaxState.OBTAINING_IPADDR || getWimaxState() == WimaxState.CONNECTED)
+                                {
+                                    if(m_bLog)
+                                        Log.i("WimaxService", "it will disconnect for re-connecting as normal mode");
+                                    disconnect();
+                                }
+                            }
+                        } else
+                        if(m_bLog)
+                            Log.w("WimaxService", "discard - already NOT tethered mode");
+                    }
+                    return;
+                }
+                if(action.equals("android.intent.action.ACTION_SHUTDOWN"))
+                {
+                    if(m_bLog)
+                        Log.d("WimaxService", "@@@@@ ACTION_SHUTDOWN @@@@@");
+                    if(get4GState() == 3 || get4GState() == 2)
+                    {
+                        if(getWimaxMode() == 1)
+                            setWimaxMode(1, false);
+                        mWimaxStateTracker.disconnectAndStop();
+                        return;
+                    }
+                } else
+                {
+                    return;
+                }
+            }
+            updateWimaxStatus();
+        }
+
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

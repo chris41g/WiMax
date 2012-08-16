@@ -1,0 +1,318 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   net4GManager.java
+
+package android.net.fourG;
+
+import android.net.DhcpInfo;
+import android.os.Handler;
+import android.os.Parcelable;
+
+// Referenced classes of package android.net.fourG:
+//            INet4GManager, net4GInfo, net4GDeviceInfo
+
+public abstract class net4GManager
+{
+    public static abstract class RadioInfoTemperature
+        implements Parcelable
+    {
+
+        public int getCurrent()
+        {
+            return m_nTemperature;
+        }
+
+        public int getMin()
+        {
+            return m_nMinTemp;
+        }
+
+        public int getMax()
+        {
+            return m_nMaxTemp;
+        }
+
+        public boolean resetMinMax()
+        {
+            return false;
+        }
+
+        public boolean isRadioOverheat()
+        {
+            return m_nTemperature > 120;
+        }
+
+        public int m_nTemperature;
+        public int m_nMinTemp;
+        public int m_nMaxTemp;
+
+        public RadioInfoTemperature()
+        {
+        }
+    }
+
+    public static abstract class ConnectionStatistics
+        implements Parcelable
+    {
+
+        public long getTotalRxBytes()
+        {
+            return m_lTotalRxBytes;
+        }
+
+        public long getTotalRxPackets()
+        {
+            return m_lTotalRxPackets;
+        }
+
+        public long getTotalTxBytes()
+        {
+            return m_lTotalTxBytes;
+        }
+
+        public long getTotalTxPackets()
+        {
+            return m_lTotalTxPackets;
+        }
+
+        public abstract int getDownlinkModulation();
+
+        public abstract int getUplinkModulation();
+
+        void refresh()
+        {
+            getTotalRxBytes();
+            getTotalRxPackets();
+            getTotalTxBytes();
+            getTotalTxPackets();
+        }
+
+        public long m_lTotalRxBytes;
+        public long m_lTotalRxPackets;
+        public long m_lTotalTxBytes;
+        public long m_lTotalTxPackets;
+
+        public ConnectionStatistics()
+        {
+        }
+    }
+
+    public class Lock
+    {
+
+        public void acquire()
+        {
+        }
+
+        public void release()
+        {
+        }
+
+        public void setReferenceCounted(boolean flag)
+        {
+        }
+
+        public boolean isHeld()
+        {
+            return false;
+        }
+
+        public String toString()
+        {
+            return "";
+        }
+
+        protected void finalize()
+            throws Throwable
+        {
+        }
+
+        protected String mTag;
+        protected int mRefCount;
+        protected int mLockType;
+        protected boolean mRefCounted;
+        protected boolean mHeld;
+
+        protected Lock(int lockType, String tag)
+        {
+        }
+
+        protected Lock()
+        {
+        }
+    }
+
+
+    public net4GManager(INet4GManager service, Handler handler)
+    {
+        nlastError = 0;
+    }
+
+    public net4GManager()
+    {
+        nlastError = 0;
+    }
+
+    public boolean disconnect()
+    {
+        return false;
+    }
+
+    public boolean reconnect()
+    {
+        return false;
+    }
+
+    public boolean reassociate()
+    {
+        return false;
+    }
+
+    public abstract net4GInfo getConnectionInfo();
+
+    public ConnectionStatistics createConnectionStatistics()
+    {
+        return null;
+    }
+
+    public net4GDeviceInfo getDeviceInformation()
+    {
+        return null;
+    }
+
+    public DhcpInfo getDhcpInfo()
+    {
+        return null;
+    }
+
+    public int getLastError()
+    {
+        return nlastError;
+    }
+
+    public int setLastError(int error)
+    {
+        return nlastError = error;
+    }
+
+    public boolean setRoamingEnabled(boolean enabled)
+    {
+        return false;
+    }
+
+    public boolean isRoamingEnabled()
+    {
+        return false;
+    }
+
+    public RadioInfoTemperature getRadioInfoTemperature()
+    {
+        return null;
+    }
+
+    public boolean set4GEnabled(boolean enabled)
+    {
+        return false;
+    }
+
+    public int get4GState()
+    {
+        return 4;
+    }
+
+    public boolean is4GEnabled()
+    {
+        return get4GState() == 3;
+    }
+
+    public static int calculateSignalLevel(int rssi, int numLevels)
+    {
+        return calculateSignalLevel(rssi, 0, numLevels);
+    }
+
+    public static int calculateSignalLevel(int rssi, int cinr, int numLevels)
+    {
+        return 0;
+    }
+
+    public static int compareSignalLevel(int rssiA, int rssiB)
+    {
+        return rssiA - rssiB;
+    }
+
+    public static int compareSignalLevel_Cinr(int cinrA, int cinrB)
+    {
+        return cinrA - cinrB;
+    }
+
+    public Lock createLock(int lockType, String tag)
+    {
+        return null;
+    }
+
+    public Lock createLock(String tag)
+    {
+        return null;
+    }
+
+    public static final int ERROR_NONE = 0;
+    public static final int ERROR_AUTHENTICATING = 1;
+    public static final int ERROR_SCAN_NOT_ALLOWED_NOW_MS_DATA_XFER_IMPACTS = 2;
+    public static final int ERROR_SCAN_NOT_ALLOWED_NOW_NETWORK_IMPACTS = 3;
+    public static final int ERROR_SCAN_NOT_ALLOWED_NOW_NETWORK_MGMT_PROHIBITED = 4;
+    public static final int ERROR_ALREADY_CONNECTED = 5;
+    public static final int ERROR_NO_COVERAGE_AVAILABLE = 6;
+    public static final int ERROR_ROAMING_NOT_ALLOWED = 7;
+    public static final int ERROR_DEVICE_NOT_PROVISIONED = 8;
+    public static final int ERROR_DEVICE_PROVISIONING_DATA_ERROR = 9;
+    public static final int ERROR_INVALID_DEVICE_PROFILE = 10;
+    public static final int ERROR_OPERATION_ALREADY_IN_PROGRESS = 11;
+    public static final int ERROR_RADIO_POLICY_VIOLATION = 12;
+    public static final int ERROR_RADIO_OFF = 13;
+    public static final int ERROR_OTHER = 100;
+    protected int nlastError;
+    public static final String WIMAX_NETWORK_STATE_CHANGED_ACTION = "android.net.fourG.wimax.WIMAX_NETWORK_STATE_CHANGED";
+    public static final String EXTRA_WIMAX_STATE = "WimaxState";
+    public static final String EXTRA_WIMAX_STATE_INT = "WimaxStateInt";
+    public static final String EXTRA_WIMAX_STATE_DETAILED = "WimaxStateDetail";
+    public static final String NETWORK_STATE_CHANGED_ACTION = "android.net.fourG.wimax.NETWORK_STATE_CHANGED";
+    public static final String EXTRA_NETWORK_INFO = "network_info";
+    public static final String EXTRA_4G_INFO = "fourG_info";
+    public static final String NET_4G_HANDOVER_COMPLETE_ACTION = "android.net.NET_4G_HANDOVER_COMPLETE";
+    public static final String EXTRA_4G_CURRENT_SERVING_BS = "4G_current_serving_bs";
+    public static final String EXTRA_4G_PREVIOUS_SERVING_BS = "4G_previous_serving_bs";
+    public static final String NET_4G_HANDOVER_FAILED_ACTION = "android.net.NET_4G_HANDOVER_FAILED";
+    public static final String EXTRA_HANDOVER_FAILURE_REASON = "handover_failure_reason";
+    public static final String NET_4G_STATE_CHANGED_ACTION = "android.net.fourG.NET_4G_STATE_CHANGED";
+    public static final String EXTRA_4G_STATE = "4g_state";
+    public static final String EXTRA_4G_PREVIOUS_STATE = "4G_previous_state";
+    public static final String SUPPLICANT_STATE_CHANGED_ACTION = "android.net.fourG.NET_4G_SUPPLICANT_STATE_CHANGED";
+    public static final String EXTRA_SUPPLICANT_STATE = "4g_supplicant_state";
+    public static final int NET_4G_STATE_DISABLING = 0;
+    public static final int NET_4G_STATE_DISABLED = 1;
+    public static final int NET_4G_STATE_ENABLING = 2;
+    public static final int NET_4G_STATE_ENABLED = 3;
+    public static final int NET_4G_STATE_UNKNOWN = 4;
+    public static final String LINK_STATE_DETAIL_CHANGED_ACTION = "android.net.LINK_STATE_DETAIL_CHANGED";
+    public static final String EXTRA_LINK_STATE_DETAIL = "link_state_detail";
+    public static final String NET_4G_RADIO_OVERHEAT_ACTION = "android.net.RADIO_OVERHEAT";
+    public static final String EXTRA_CURRENT_RADIO_TEMPERATURE = "radio_temperature";
+    public static final String RSSI_CHANGED_ACTION = "android.net.RSSI_CHANGED";
+    public static final String EXTRA_NEW_RSSI = "newRSSI";
+    public static final String CINR_CHANGED_ACTION = "android.net.CINR_CHANGED";
+    public static final String EXTRA_NEW_CINR = "newCINR";
+    public static final String EXTRA_NEW_STATE = "newState";
+    public static final String EXTRA_PREVIOUS_4G_STATE = "previousState";
+    public static final String EXTRA_SUPPLICANT_ERROR = "supplicantError";
+    public static final String SCAN_RESULTS_AVAILABLE_ACTION = "android.net.SCAN_RESULTS_AVAILABLE";
+    public static final String EXTRA_SCAN_RESULT_BS_LIST = "bs_scan_result";
+    public static final int LOGLEVEL_FATAL = 1;
+    public static final int LOGLEVEL_ERROR = 2;
+    public static final int LOGLEVEL_WARNING = 3;
+    public static final int LOGLEVEL_DEBUG = 4;
+    public static final int WIMAX_MODE_FULL = 1;
+    public static final int WIMAX_MODE_SCAN_ONLY = 2;
+    protected static final int MAX_ACTIVE_LOCKS = 50;
+    protected int mActiveLockCount;
+}

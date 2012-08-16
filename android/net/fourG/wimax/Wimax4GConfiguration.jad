@@ -1,0 +1,146 @@
+// Decompiled by Jad v1.5.8e. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.geocities.com/kpdus/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   Wimax4GConfiguration.java
+
+package android.net.fourG.wimax;
+
+import android.net.fourG.net4GConfiguration;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Wimax4GConfiguration extends net4GConfiguration
+{
+
+    public Wimax4GConfiguration()
+    {
+    }
+
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    public boolean getNetworkRequiresPassword()
+    {
+        return m_bNetworkReqPwd;
+    }
+
+    public void setNetworkRequiresPassword(boolean bpswd)
+    {
+        m_bNetworkReqPwd = bpswd;
+    }
+
+    public boolean getNetworkRequiresUsername()
+    {
+        return m_bNetworkReqUsername;
+    }
+
+    public void setNetworkRequiresUsername(boolean bUname)
+    {
+        m_bNetworkReqPwd = bUname;
+    }
+
+    public int getNspId()
+    {
+        return m_nNspId;
+    }
+
+    public void setNspName(String nspName)
+    {
+        m_strNspName = nspName;
+    }
+
+    public String getNspName()
+    {
+        return m_strNspName;
+    }
+
+    public void setNspId(int NspId)
+    {
+        m_nNspId = NspId;
+    }
+
+    public void setPassword(String password)
+    {
+        m_strPassword = password;
+    }
+
+    public void setUsername(String Username)
+    {
+        m_strUsername = Username;
+    }
+
+    public String getPassword()
+    {
+        return m_strPassword;
+    }
+
+    public String getUsername()
+    {
+        return m_strUsername;
+    }
+
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer("Wimax4GConfiguration: ");
+        String none = "<none>";
+        sb.append("NspName: ").append(m_strNspName != null ? m_strNspName : none).append(", Username: ").append(m_strUsername != null ? m_strUsername : none).append(", Password: ").append(m_strPassword != null ? m_strPassword : none);
+        return sb.toString();
+    }
+
+    public void setValue(int nNspId, String strNspName, String strUsername, String strPassword)
+    {
+        m_nNspId = nNspId;
+        m_strNspName = strNspName;
+        m_strUsername = strUsername;
+        m_strPassword = strPassword;
+    }
+
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(m_strNspName);
+        dest.writeString(m_strUsername);
+        dest.writeString(m_strPassword);
+        dest.writeInt(m_nNspId);
+        dest.writeInt(m_nNetworkId);
+        dest.writeInt(m_nStatus);
+        dest.writeInt(m_nPriority);
+    }
+
+    private boolean m_bNetworkReqPwd;
+    private boolean m_bNetworkReqUsername;
+    private int m_nNspId;
+    private String m_strNspName;
+    private String m_strUsername;
+    private String m_strPassword;
+    public static final android.os.Parcelable.Creator CREATOR = new android.os.Parcelable.Creator() {
+
+        public Wimax4GConfiguration createFromParcel(Parcel in)
+        {
+            Wimax4GConfiguration info = new Wimax4GConfiguration();
+            info.m_strNspName = in.readString();
+            info.m_strUsername = in.readString();
+            info.m_strPassword = in.readString();
+            info.m_nNspId = in.readInt();
+            info.in.readInt().Wimax4GConfiguration = in;
+            info.in.readInt().Wimax4GConfiguration = in;
+            info.in.readInt().Object = in;
+            return info;
+        }
+
+        public Wimax4GConfiguration[] newArray(int size)
+        {
+            return new Wimax4GConfiguration[size];
+        }
+
+    };
+
+
+
+
+
+
+
+
+}
